@@ -217,23 +217,38 @@ export async function fetchRecordsFromSheets() {
   const records = [];
   for (const row of rows) {
     const empId = String(row.emp_id);
-    const date = row.date?.slice(0, 10);
 
-    if (row.check_in) {
+    // ── แก้บัควันเพี้ยน: ตัด timezone ออก ──
+    // row.date อาจมาเป็น "2026-05-04T00:00:00.000Z" → ต้อง slice แค่ 10 ตัวแรก
+    // แต่ถ้า postgres ส่งมาเป็น Date object ให้แปลงด้วย toISOString แล้ว slice
+    let date;
+    if (typeof row.date === "string") {
+      date = row.date.slice(0, 10); // "2026-05-04"
+    } else {
+      // กรณี Date object — ใช้ UTC เพื่อไม่ให้ timezone ดึงวันไปก่อน
+      const d = new Date(row.date);
+      date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    }
+
+    // ── แก้บัคเวลา: ตัดให้เหลือแค่ HH:MM ──
+    const checkIn = row.check_in ? String(row.check_in).slice(0, 5) : null;
+    const checkOut = row.check_out ? String(row.check_out).slice(0, 5) : null;
+
+    if (checkIn) {
       records.push({
         id: `${empId}_${date}_in`,
         empId,
         date,
-        time: row.check_in?.slice(0, 5),
+        time: checkIn,
         type: "in",
       });
     }
-    if (row.check_out && row.check_out !== row.check_in) {
+    if (checkOut && checkOut !== checkIn) {
       records.push({
         id: `${empId}_${date}_out`,
         empId,
         date,
-        time: row.check_out?.slice(0, 5),
+        time: checkOut,
         type: "out",
       });
     }
