@@ -154,7 +154,7 @@ export function exportPDF(records, emp, year, month) {
       <td style="text-align:left; padding:5px 10px;">${r.label}</td>
       <td>${r.inTime}</td>
       <td>${r.outTime}</td>
-      <td style="text-align:left; padding:5px 10px; font-size:12px;">${note}</td>
+      <td style="text-align:center; padding:5px 10px; font-size:12px;">${note}</td>
     </tr>`;
     })
     .join("");
@@ -182,8 +182,7 @@ export function exportPDF(records, emp, year, month) {
 <body>
   <div class="header">
     <h1>รายงานการเข้าปฏิบัติงาน</h1>
-    <p>${empLabel}</p>
-    ${periodLabel ? `<p>${periodLabel}</p>` : ""}
+    <p>${empLabel}${periodLabel ? `  ${periodLabel}` : ""}</p>
   </div>
   <table>
     <thead>
@@ -191,7 +190,7 @@ export function exportPDF(records, emp, year, month) {
         <th style="width:40%;text-align:left;padding-left:10px;">วันที่</th>
         <th style="width:17%;">เวลาเข้างาน</th>
         <th style="width:17%;">เวลาเลิกงาน</th>
-        <th style="width:26%;text-align:left;padding-left:10px;">หมายเหตุ</th>
+        <th style="width:26%;text-align:center;">หมายเหตุ</th>
       </tr>
     </thead>
     <tbody>${tableRows}</tbody>
