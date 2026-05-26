@@ -155,13 +155,13 @@ export default function Dashboard({ records, curEmpId, currentEmp }) {
                     {isHolidayDay && c.cur && (
                       <div className="holiday-label">🎌 {holidayName}</div>
                     )}
-                    {!isWeekend && inRec && (
+                    {!isWeekend && !isHolidayDay && inRec && (
                       <div className="entry cal-entry entry-in">
                         <span className="entry-dot" />
                         เข้า {inRec.time}
                       </div>
                     )}
-                    {!isWeekend && outRec && (
+                    {!isWeekend && !isHolidayDay && outRec && (
                       <div className="entry cal-entry entry-out">
                         <span className="entry-dot" />
                         ออก {outRec.time}
