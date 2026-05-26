@@ -28,15 +28,13 @@ export default function HistoryPage({
 }) {
   const [search, setSearch] = useState("");
   const [filterDate, setFilterDate] = useState("");
+  const [filterType, setFilterType] = useState("all"); // "all" | "in" | "out"
 
-  // เลือกปี/เดือนสำหรับ Export PDF (default = เดือนปัจจุบัน)
   const now = new Date();
   const [exportYear, setExportYear] = useState(now.getFullYear());
-  const [exportMonth, setExportMonth] = useState(now.getMonth() + 1); // 1-12
+  const [exportMonth, setExportMonth] = useState(now.getMonth() + 1);
 
   const emp = employees.find((e) => e.id === curEmpId);
-
-  // สร้าง list ปีที่มีข้อมูล (ย้อนหลัง 5 ปี)
   const yearOptions = Array.from(
     { length: 5 },
     (_, i) => now.getFullYear() - i,
@@ -47,6 +45,7 @@ export default function HistoryPage({
       .filter((r) => {
         if (r.empId !== curEmpId) return false;
         if (filterDate && r.date !== filterDate) return false;
+        if (filterType !== "all" && r.type !== filterType) return false;
         if (search && !r.date.includes(search) && !r.time.includes(search))
           return false;
         return true;
@@ -55,7 +54,7 @@ export default function HistoryPage({
       .sort(
         (a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time),
       );
-  }, [records, curEmpId, search, filterDate]);
+  }, [records, curEmpId, search, filterDate, filterType]);
 
   const handleExportPDF = () => {
     exportPDF(records, emp, exportYear, exportMonth);
@@ -70,8 +69,6 @@ export default function HistoryPage({
             {emp?.name} · {emp?.dept}
           </p>
         </div>
-
-        {/* Export PDF + เลือกเดือน/ปี */}
         <div className="export-group">
           <select
             className="export-select"
@@ -108,6 +105,16 @@ export default function HistoryPage({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        {/* Dropdown กรองประเภท */}
+        <select
+          className="export-select"
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+        >
+          <option value="all">ทั้งหมด</option>
+          <option value="in">เข้างาน</option>
+          <option value="out">ออกงาน</option>
+        </select>
         <input
           type="date"
           value={filterDate}
@@ -118,6 +125,7 @@ export default function HistoryPage({
           onClick={() => {
             setSearch("");
             setFilterDate("");
+            setFilterType("all");
           }}
         >
           ✕ ล้าง
