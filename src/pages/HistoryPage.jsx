@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { getStatus } from "../services/api";
 import "./HistoryPage.css";
-import { Exportpdf } from "../services/Exportpdf";
+import { exportPDF } from "../services/exportPDF";
 
 export default function HistoryPage({
   records,
