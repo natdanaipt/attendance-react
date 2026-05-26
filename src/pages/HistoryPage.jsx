@@ -3,6 +3,21 @@ import { getStatus } from "../services/api";
 import "./HistoryPage.css";
 import { exportPDF } from "../services/exportPDF";
 
+const TH_MONTHS = [
+  "มกราคม",
+  "กุมภาพันธ์",
+  "มีนาคม",
+  "เมษายน",
+  "พฤษภาคม",
+  "มิถุนายน",
+  "กรกฎาคม",
+  "สิงหาคม",
+  "กันยายน",
+  "ตุลาคม",
+  "พฤศจิกายน",
+  "ธันวาคม",
+];
+
 export default function HistoryPage({
   records,
   employees,
@@ -14,7 +29,18 @@ export default function HistoryPage({
   const [search, setSearch] = useState("");
   const [filterDate, setFilterDate] = useState("");
 
+  // เลือกปี/เดือนสำหรับ Export PDF (default = เดือนปัจจุบัน)
+  const now = new Date();
+  const [exportYear, setExportYear] = useState(now.getFullYear());
+  const [exportMonth, setExportMonth] = useState(now.getMonth() + 1); // 1-12
+
   const emp = employees.find((e) => e.id === curEmpId);
+
+  // สร้าง list ปีที่มีข้อมูล (ย้อนหลัง 5 ปี)
+  const yearOptions = Array.from(
+    { length: 5 },
+    (_, i) => now.getFullYear() - i,
+  );
 
   const myData = useMemo(() => {
     return records
@@ -32,7 +58,7 @@ export default function HistoryPage({
   }, [records, curEmpId, search, filterDate]);
 
   const handleExportPDF = () => {
-    exportPDF(records, emp, calYear, calMonth);
+    exportPDF(records, emp, exportYear, exportMonth);
   };
 
   return (
@@ -44,10 +70,35 @@ export default function HistoryPage({
             {emp?.name} · {emp?.dept}
           </p>
         </div>
-        {/* เปลี่ยนจาก Export CSV → Export PDF */}
-        <button className="export-btn" onClick={handleExportPDF}>
-          ↓ Export PDF
-        </button>
+
+        {/* Export PDF + เลือกเดือน/ปี */}
+        <div className="export-group">
+          <select
+            className="export-select"
+            value={exportMonth}
+            onChange={(e) => setExportMonth(Number(e.target.value))}
+          >
+            {TH_MONTHS.map((m, i) => (
+              <option key={i + 1} value={i + 1}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <select
+            className="export-select"
+            value={exportYear}
+            onChange={(e) => setExportYear(Number(e.target.value))}
+          >
+            {yearOptions.map((y) => (
+              <option key={y} value={y}>
+                {y + 543}
+              </option>
+            ))}
+          </select>
+          <button className="export-btn" onClick={handleExportPDF}>
+            ↓ Export PDF
+          </button>
+        </div>
       </div>
 
       <div className="hist-filters">
