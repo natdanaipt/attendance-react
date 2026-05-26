@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { getStatus, exportCSV } from "../services/api";
+import { getStatus } from "../services/api";
+import { exportPDF } from "../services/exportPDF";
 import "./HistoryPage.css";
 
 export default function HistoryPage({
@@ -30,6 +31,10 @@ export default function HistoryPage({
       );
   }, [records, curEmpId, search, filterDate]);
 
+  const handleExportPDF = () => {
+    exportPDF(records, emp, calYear, calMonth);
+  };
+
   return (
     <div className="history-page">
       <div className="history-page-header">
@@ -39,11 +44,9 @@ export default function HistoryPage({
             {emp?.name} · {emp?.dept}
           </p>
         </div>
-        <button
-          className="export-btn"
-          onClick={() => exportCSV(records, curEmpId, calYear, calMonth)}
-        >
-          ↓ Export CSV
+        {/* เปลี่ยนจาก Export CSV → Export PDF */}
+        <button className="export-btn" onClick={handleExportPDF}>
+          ↓ Export PDF
         </button>
       </div>
 
