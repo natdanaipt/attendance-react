@@ -158,34 +158,6 @@ export default function App() {
       getAllRecords().then(setAllRecords);
     }
   }, [page]);
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    if (!code) return;
-
-    // ลบ code ออกจาก URL
-    window.history.replaceState({}, "", "/");
-
-    async function handleSSO() {
-      try {
-        const res = await fetch(
-          "https://attendance-api-j7q6.onrender.com/api/sso/callback",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ code }),
-          },
-        );
-        const data = await res.json();
-        if (data.employee) handleLogin(data.employee);
-        else alert("ไม่พบพนักงานในระบบ");
-      } catch (err) {
-        alert("SSO ไม่สำเร็จ");
-      }
-    }
-
-    handleSSO();
-  }, []);
   // ── SSO Callback ──────────────────────────────────
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
