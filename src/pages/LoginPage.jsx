@@ -70,9 +70,9 @@ export default function LoginPage({ employees, onLogin }) {
 
         {err && <div className="login-err">❌ {err}</div>}
 
-        <button className="login-btn" onClick={handleLogin}>
+        {/* <button className="login-btn" onClick={handleLogin}>
           เข้าสู่ระบบ
-        </button>
+        </button> */}
 
         <div className="login-divider">หรือ</div>
 
