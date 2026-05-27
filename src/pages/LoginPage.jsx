@@ -1,8 +1,16 @@
 import { useState } from "react";
 import "./LoginPage.css";
 
-// รหัส Admin พิเศษ
 const ADMIN_IDS = ["ADMIN", "admin", "0000"];
+
+const SSO_URL =
+  "https://sso.kmutnb.ac.th/auth/authorize?" +
+  new URLSearchParams({
+    response_type: "code",
+    client_id: "Bdtnb6ZVThzxLc3nuqybHmBI9KQFCAw0",
+    redirect_uri: "https://attendance-react-3n3s.vercel.app/callback",
+    scope: "openid profile email",
+  }).toString();
 
 export default function LoginPage({ employees, onLogin }) {
   const [empId, setEmpId] = useState("");
@@ -15,7 +23,6 @@ export default function LoginPage({ employees, onLogin }) {
       return;
     }
 
-    // Admin login
     if (ADMIN_IDS.includes(id)) {
       onLogin({
         id: "__admin__",
@@ -26,7 +33,6 @@ export default function LoginPage({ employees, onLogin }) {
       return;
     }
 
-    // พนักงานทั่วไป
     const emp = employees.find((e) => String(e.id) === String(id));
     if (!emp) {
       setErr("ไม่พบรหัสพนักงานนี้ในระบบ");
@@ -34,6 +40,10 @@ export default function LoginPage({ employees, onLogin }) {
     }
     setErr("");
     onLogin(emp);
+  }
+
+  function handleSSOLogin() {
+    window.location.href = SSO_URL;
   }
 
   return (
@@ -59,21 +69,15 @@ export default function LoginPage({ employees, onLogin }) {
         </div>
 
         {err && <div className="login-err">❌ {err}</div>}
-        
-const SSO_URL =
-  "https://sso.kmutnb.ac.th/auth/authorize?" +
-  new URLSearchParams({
-    response_type: "code",
-    client_id: "Bdtnb6ZVThzxLc3nuqybHmBI9KQFCAw0",
-    redirect_uri: "https://attendance-react-3n3s.vercel.app/callback",
-    scope: "openid profile email",
-  });
 
-function handleSSOLogin() {
-  window.location.href = SSO_URL;
-}
         <button className="login-btn" onClick={handleLogin}>
           เข้าสู่ระบบ
+        </button>
+
+        <div className="login-divider">หรือ</div>
+
+        <button className="login-btn sso-btn" onClick={handleSSOLogin}>
+          🔐 เข้าสู่ระบบด้วย SSO มจพ.
         </button>
       </div>
     </div>
