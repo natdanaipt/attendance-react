@@ -3,15 +3,6 @@ import "./LoginPage.css";
 
 const ADMIN_IDS = ["ADMIN", "admin", "0000"];
 
-const SSO_URL =
-  "https://sso.kmutnb.ac.th/auth/authorize?" +
-  new URLSearchParams({
-    response_type: "code",
-    client_id: "Bdtnb6ZVThzxLc3nuqybHmBI9KQFCAw0",
-    redirect_uri: "https://attendance-react-3n3s.vercel.app/callback",
-    scope: "openid profile email",
-  }).toString();
-
 export default function LoginPage({ employees, onLogin }) {
   const [empId, setEmpId] = useState("");
   const [err, setErr] = useState("");
@@ -43,7 +34,20 @@ export default function LoginPage({ employees, onLogin }) {
   }
 
   function handleSSOLogin() {
-    window.location.href = SSO_URL;
+    const state = Math.random().toString(36).substring(2);
+    sessionStorage.setItem("sso_state", state);
+
+    const url =
+      "https://sso.kmutnb.ac.th/auth/authorize?" +
+      new URLSearchParams({
+        response_type: "code",
+        client_id: "Bdtnb6ZVThzxLc3nuqybHmBI9KQFCAw0",
+        redirect_uri: "https://attendance-react-3n3s.vercel.app/callback",
+        scope: "openid profile email",
+        state: state,
+      }).toString();
+
+    window.location.href = url;
   }
 
   return (
