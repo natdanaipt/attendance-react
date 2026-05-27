@@ -59,7 +59,19 @@ export default function LoginPage({ employees, onLogin }) {
         </div>
 
         {err && <div className="login-err">❌ {err}</div>}
+        
+const SSO_URL =
+  "https://sso.kmutnb.ac.th/auth/authorize?" +
+  new URLSearchParams({
+    response_type: "code",
+    client_id: "Bdtnb6ZVThzxLc3nuqybHmBI9KQFCAw0",
+    redirect_uri: "https://attendance-react-3n3s.vercel.app/callback",
+    scope: "openid profile email",
+  });
 
+function handleSSOLogin() {
+  window.location.href = SSO_URL;
+}
         <button className="login-btn" onClick={handleLogin}>
           เข้าสู่ระบบ
         </button>

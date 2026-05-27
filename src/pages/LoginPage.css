@@ -121,3 +121,18 @@
   color: var(--green-dark);
   border: 1px solid var(--border-light);
 }
+.login-divider {
+  text-align: center;
+  color: #aaa;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.sso-btn {
+  background: #1a56a0;
+  margin-top: 0;
+}
+
+.sso-btn:hover {
+  background: #154080;
+}
