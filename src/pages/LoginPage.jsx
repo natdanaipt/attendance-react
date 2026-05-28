@@ -78,7 +78,7 @@ export default function LoginPage({ employees, onLogin }) {
           เข้าสู่ระบบ
         </button> */}
 
-        <div className="login-divider">หรือ</div>
+        {/* <div className="login-divider">หรือ</div> */}
 
         <button className="login-btn sso-btn" onClick={handleSSOLogin}>
           🔐 เข้าสู่ระบบด้วย SSO มจพ.
