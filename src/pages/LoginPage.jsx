@@ -41,7 +41,7 @@ export default function LoginPage({ employees, onLogin }) {
       "https://sso.kmutnb.ac.th/auth/authorize?" +
       new URLSearchParams({
         response_type: "code",
-        client_id: "Bdtnb6ZVThzxLc3nuqybHmBI9KQFCAw0",
+        client_id: "2AndnVayCN7ULuD75LFeCTtVC1HkcHYD",
         redirect_uri: "https://attendance-react-3n3s.vercel.app/callback",
         scope: "openid profile email",
         state: state,
