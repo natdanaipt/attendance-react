@@ -41,8 +41,8 @@ export default function LoginPage({ employees, onLogin }) {
       "https://sso.kmutnb.ac.th/auth/authorize?" +
       new URLSearchParams({
         response_type: "code",
-        client_id: "2AndnVayCN7ULuD75LFeCTtVC1HkcHYD",
-        redirect_uri: "https://attendance-react-3n3s.vercel.app/callback",
+        client_id: import.meta.env.VITE_SSO_CLIENT_ID,
+        redirect_uri: import.meta.env.VITE_SSO_REDIRECT_URI,
         scope: "openid profile email",
         state: state,
       }).toString();
