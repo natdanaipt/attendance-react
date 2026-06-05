@@ -1,11 +1,48 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { getStatus, MONTHS_TH } from "../services/api";
 import "./ReportPage.css";
 
-export default function ReportPage({ records, employees, isAdmin }) {
+const API_URL = "https://attendance-api-j7q6.onrender.com";
+
+export default function ReportPage({ employees, isAdmin }) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
+  const [records, setRecords] = useState([]);
+
+  // ── ดึง records จาก PostgreSQL โดยตรง ──
+  useEffect(() => {
+    async function loadRecords() {
+      try {
+        const res = await fetch(`${API_URL}/api/records`);
+        const rows = await res.json();
+        const mapped = [];
+        for (const row of rows) {
+          let date;
+          if (typeof row.date === "string") {
+            date = row.date.slice(0, 10);
+          } else {
+            const d = new Date(row.date);
+            date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+          }
+          const empId = String(row.emp_id);
+          const checkIn = row.check_in
+            ? String(row.check_in).slice(0, 5)
+            : null;
+          const checkOut = row.check_out
+            ? String(row.check_out).slice(0, 5)
+            : null;
+          if (checkIn) mapped.push({ empId, date, time: checkIn, type: "in" });
+          if (checkOut)
+            mapped.push({ empId, date, time: checkOut, type: "out" });
+        }
+        setRecords(mapped);
+      } catch (err) {
+        console.error("โหลด records ไม่ได้:", err);
+      }
+    }
+    loadRecords();
+  }, []);
 
   const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
 
@@ -114,7 +151,6 @@ export default function ReportPage({ records, employees, isAdmin }) {
     <div className="report-page">
       <div className="report-header">
         <h2 className="report-title">รายงานสรุปรายเดือน</h2>
-
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div className="report-month-nav">
             <button className="rpt-nav-btn" onClick={() => changeMonth(-1)}>
@@ -127,7 +163,6 @@ export default function ReportPage({ records, employees, isAdmin }) {
               &#8594;
             </button>
           </div>
-
           {isAdmin && (
             <button className="export-pdf-btn" onClick={handleExportPDF}>
               ⬇ Export PDF
