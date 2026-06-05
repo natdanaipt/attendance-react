@@ -37,7 +37,10 @@ const ADMIN_IDS = ["ADMIN", "admin", "0000"];
 
 export default function App() {
   const [employees, setEmployees] = useState(() => initEmployees());
-  const [currentEmp, setCurrentEmp] = useState(null); // null = ยังไม่ได้ login
+  const [currentEmp, setCurrentEmp] = useState(() => {
+    const saved = sessionStorage.getItem("currentEmp");
+    return saved ? JSON.parse(saved) : null;
+  }); // null = ยังไม่ได้ login
   const [page, setPage] = useState("dashboard");
   const [toast, setToast] = useState({ msg: "", show: false, error: false });
   const [myRecords, setMyRecords] = useState([]);
@@ -194,11 +197,13 @@ export default function App() {
   // ── Login ──────────────────────────────────────
   function handleLogin(emp) {
     setCurrentEmp(emp);
+    sessionStorage.setItem("currentEmp", JSON.stringify(emp));
     setPage("dashboard");
   }
 
   function handleLogout() {
     setCurrentEmp(null);
+    sessionStorage.removeItem("currentEmp");
     setMyRecords([]);
     setAllRecords([]);
     setPage("dashboard");
