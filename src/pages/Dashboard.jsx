@@ -22,7 +22,9 @@ export default function Dashboard({
   const [calMonth, setCalMonth] = useState(now.getMonth());
 
   // ── Admin: เลือกพนักงาน ──
-  const [selectedEmpId, setSelectedEmpId] = useState(curEmpId);
+  const [selectedEmpId, setSelectedEmpId] = useState(
+    isAdmin ? employees?.[0]?.id || curEmpId : curEmpId,
+  );
   const [adminRecords, setAdminRecords] = useState([]);
   const [loadingRecs, setLoadingRecs] = useState(false);
 

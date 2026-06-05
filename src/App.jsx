@@ -28,7 +28,6 @@ const NAV_USER = [
 // เมนู Admin (รหัส ADMIN หรือ 0000)
 const NAV_ADMIN = [
   { key: "dashboard", label: "📅 ปฏิทิน" },
-  { key: "record", label: "⏱ บันทึกเวลา" },
   { key: "history", label: "📋 ประวัติของฉัน" },
   { key: "report", label: "📈 รายงาน" },
   { key: "employees", label: "👥 พนักงาน" },
