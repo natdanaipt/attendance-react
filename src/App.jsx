@@ -51,7 +51,8 @@ export default function App() {
   const [calYear] = useState(now.getFullYear());
   const [calMonth] = useState(now.getMonth());
 
-  const isAdmin = currentEmp?.id === "__admin__";
+  const isAdmin =
+    currentEmp?.id === "__admin__" || currentEmp?.role === "admin";
   const NAV = isAdmin ? NAV_ADMIN : NAV_USER;
 
   // เพิ่ม useEffect โหลด employees จาก Sheets ตอนเปิดเว็บ

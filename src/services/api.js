@@ -267,6 +267,7 @@ export async function fetchEmployeesFromSheets() {
     dept: row.dept || "-",
     pos: row.pos || "-",
     gender: row.gender || "-",
+    role: row.role || "user",
   }));
 }
 // ── วันหยุดราชการไทย 2569 ─────────────────────────
