@@ -167,9 +167,8 @@ export function initEmployees() {
 export function getStatus(time) {
   const [h, m] = time.split(":").map(Number);
   const t = h * 60 + m;
-  if (t <= 8 * 60) return { label: "ตรงเวลา", kind: "ok" };
-  if (t <= 8 * 60 + 30) return { label: "มาสาย", kind: "late" };
-  return { label: "สายมาก", kind: "late" };
+  if (t <= 8 * 60 + 30) return { label: "ตรงเวลา", kind: "ok" };
+  return { label: "มาสาย", kind: "late" };
 }
 
 export function countWorkDays(year, month) {
