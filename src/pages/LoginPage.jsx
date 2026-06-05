@@ -57,7 +57,7 @@ export default function LoginPage({ employees, onLogin }) {
         <h1 className="login-title">บันทึกเวลาเข้า-ออกงาน</h1>
         {/* <p className="login-sub">กรอกรหัสพนักงานเพื่อเข้าสู่ระบบ</p> */}
 
-        {/* <div className="login-field">
+        <div className="login-field">
           <label>รหัสพนักงาน</label>
           <input
             type="text"
@@ -70,7 +70,7 @@ export default function LoginPage({ employees, onLogin }) {
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             autoFocus
           />
-        </div> */}
+        </div>
 
         {err && <div className="login-err">❌ {err}</div>}
 

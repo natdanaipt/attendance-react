@@ -89,7 +89,7 @@ export default function ImportPage({ employees, onImport }) {
 
   return (
     <div className="import-page">
-      <h2 className="import-title">นำเข้าข้อมูล ZKTime</h2>
+      {/* <h2 className="import-title">นำเข้าข้อมูล ZKTime</h2> */}
 
       <div className="import-panel">
         <div
