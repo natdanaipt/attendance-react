@@ -32,10 +32,8 @@ const NAV_ADMIN = [
   { key: "history", label: "📋 ประวัติของฉัน" },
   { key: "report", label: "📈 รายงาน" },
   { key: "employees", label: "👥 พนักงาน" },
-  { key: "import", label: "⬆ นำเข้า ZKTime" },
 ];
 
-// รหัส Admin พิเศษ (ไม่ต้องมีในรายชื่อพนักงาน)
 const ADMIN_IDS = ["ADMIN", "admin", "0000"];
 
 export default function App() {
