@@ -7,8 +7,8 @@ import {
   isHoliday,
   getHolidayName,
   fetchRecordsByEmp,
-  exportPDF,
 } from "../services/api";
+import { exportPDF } from "../services/exportPDF";
 
 export default function Dashboard({
   records,
@@ -146,10 +146,10 @@ export default function Dashboard({
             <button
               className="export-pdf-btn"
               onClick={() =>
-                exportPDF(activeRecords, activeEmp, calYear, calMonth)
+                exportPDF(activeRecords, activeEmp, calYear, calMonth + 1)
               }
             >
-              ⬇ Export PDF
+              ↓ Export PDF
             </button>
           )}
         </div>

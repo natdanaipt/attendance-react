@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { getStatus, MONTHS_TH, exportPDF } from "../services/api";
+import { getStatus, MONTHS_TH } from "../services/api";
 import "./ReportPage.css";
 
 export default function ReportPage({ records, employees, isAdmin }) {
@@ -20,15 +20,7 @@ export default function ReportPage({ records, employees, isAdmin }) {
         (r) => getStatus(r.time).kind === "late",
       ).length;
       const onTime = myRecs.length - late;
-      const totalMins = myRecs.reduce((s, r) => {
-        const [h, m] = r.time.split(":").map(Number);
-        return s + h * 60 + m;
-      }, 0);
-      const avgTime =
-        myRecs.length > 0
-          ? `${String(Math.floor(totalMins / myRecs.length / 60)).padStart(2, "0")}:${String(Math.floor((totalMins / myRecs.length) % 60)).padStart(2, "0")}`
-          : "—";
-      return { ...e, days, onTime, late, avgTime };
+      return { ...e, days, onTime, late };
     });
   }, [records, employees, monthKey]);
 
@@ -47,9 +39,75 @@ export default function ReportPage({ records, employees, isAdmin }) {
     setYear(y);
   }
 
-  // Export PDF ทุกคนในเดือนนั้น
   function handleExportPDF() {
-    exportPDF(records, { name: "ทุกคน", id: "all" }, year, month);
+    const monthName = MONTHS_TH[month];
+    const buddhistYear = year + 543;
+
+    const tableRows = rows
+      .map(
+        (e) => `
+      <tr>
+        <td>${e.id}</td>
+        <td>${e.name}</td>
+        <td>${e.dept || "-"}</td>
+        <td style="text-align:center">${e.days}</td>
+        <td style="text-align:center; color:green">${e.onTime}</td>
+        <td style="text-align:center; color:#cc0000">${e.late}</td>
+      </tr>
+    `,
+      )
+      .join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8"/>
+  <title>รายงานสรุปรายเดือน</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Sarabun',sans-serif; font-size:13px; color:#111; padding:30px 40px; }
+    .header { text-align:center; margin-bottom:20px; }
+    .header h1 { font-size:18px; font-weight:700; margin-bottom:4px; }
+    .header p  { font-size:14px; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    thead tr { background-color:#f0f0f0; }
+    th { border:1px solid #ccc; padding:7px 10px; text-align:center; font-weight:700; font-size:13px; }
+    td { border:1px solid #ddd; padding:6px 10px; }
+    tr:nth-child(even) { background:#fafafa; }
+    @media print { @page { size:A4 landscape; margin:15mm; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>รายงานสรุปการเข้าปฏิบัติงาน</h1>
+    <p>ประจำเดือน ${monthName} ${buddhistYear}</p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>รหัส</th>
+        <th>ชื่อ-นามสกุล</th>
+        <th>แผนก</th>
+        <th>วันที่มา</th>
+        <th>ตรงเวลา</th>
+        <th>สาย</th>
+      </tr>
+    </thead>
+    <tbody>${tableRows}</tbody>
+  </table>
+</body>
+</html>`;
+
+    const printWindow = window.open("", "_blank", "width=900,height=700");
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 800);
+    };
   }
 
   return (
@@ -70,7 +128,6 @@ export default function ReportPage({ records, employees, isAdmin }) {
             </button>
           </div>
 
-          {/* ปุ่ม Export PDF — Admin เท่านั้น */}
           {isAdmin && (
             <button className="export-pdf-btn" onClick={handleExportPDF}>
               ⬇ Export PDF
@@ -89,7 +146,6 @@ export default function ReportPage({ records, employees, isAdmin }) {
               <th>วันที่มา</th>
               <th>ตรงเวลา</th>
               <th>สาย</th>
-              <th>เวลาเข้าเฉลี่ย</th>
             </tr>
           </thead>
           <tbody>
@@ -105,7 +161,6 @@ export default function ReportPage({ records, employees, isAdmin }) {
                 <td>
                   <span className="rpt-late">{e.late}</span>
                 </td>
-                <td className="rpt-avg">{e.avgTime}</td>
               </tr>
             ))}
           </tbody>
