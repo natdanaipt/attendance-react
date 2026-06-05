@@ -249,3 +249,37 @@
   color: var(--text-dark);
   font-weight: 500;
 }
+.admin-emp-select {
+  padding: 12px 24px;
+  background: #f0f4f0;
+  border-bottom: 1px solid #dde8dd;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.admin-emp-select select {
+  padding: 6px 12px;
+  border: 1px solid #b5c9b5;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.export-pdf-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  background: #4c6d4d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.export-pdf-btn:hover {
+  background: #3a5a3b;
+}

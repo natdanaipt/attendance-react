@@ -301,3 +301,85 @@ export function isHoliday(dateStr) {
 export function getHolidayName(dateStr) {
   return HOLIDAYS_2569[dateStr] || null;
 }
+export async function fetchRecordsByEmp(empId) {
+  const res = await fetch(`${API_URL}/api/attendance/${empId}`);
+  const rows = await res.json();
+
+  const records = [];
+  for (const row of rows) {
+    let date;
+    if (typeof row.date === "string") {
+      date = row.date.slice(0, 10);
+    } else {
+      const d = new Date(row.date);
+      date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    }
+
+    const checkIn = row.check_in ? String(row.check_in).slice(0, 5) : null;
+    const checkOut = row.check_out ? String(row.check_out).slice(0, 5) : null;
+
+    if (checkIn) {
+      records.push({
+        id: `${empId}_${date}_in`,
+        empId,
+        date,
+        time: checkIn,
+        type: "in",
+      });
+    }
+    if (checkOut && checkOut !== checkIn) {
+      records.push({
+        id: `${empId}_${date}_out`,
+        empId,
+        date,
+        time: checkOut,
+        type: "out",
+      });
+    }
+  }
+  return records;
+}
+
+// Export PDF — ใช้ jsPDF (ลง npm: npm install jspdf)
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+
+export function exportPDF(records, employee, year, month) {
+  const doc = new jsPDF();
+  const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
+  const monthName = `${MONTHS_TH[month]} ${year + 543}`;
+
+  // หัวรายงาน
+  doc.setFontSize(16);
+  doc.text("รายงานเวลาเข้า-ออกงาน", 105, 20, { align: "center" });
+  doc.setFontSize(12);
+  doc.text(`ชื่อ: ${employee.name}  รหัส: ${employee.id}`, 14, 32);
+  doc.text(`แผนก: ${employee.dept || "-"}  เดือน: ${monthName}`, 14, 40);
+
+  // กรอง + จัดกลุ่มตามวัน
+  const inRecs = records.filter(
+    (r) => r.date.startsWith(monthKey) && r.type === "in",
+  );
+  const outRecs = records.filter(
+    (r) => r.date.startsWith(monthKey) && r.type === "out",
+  );
+  const dates = [...new Set([...inRecs, ...outRecs].map((r) => r.date))].sort();
+
+  const tableData = dates.map((date) => {
+    const inR = inRecs.find((r) => r.date === date);
+    const outR = outRecs.find((r) => r.date === date);
+    const status = inR ? getStatus(inR.time).label : "-";
+    return [date, inR?.time || "-", outR?.time || "-", status];
+  });
+
+  // ตาราง
+  doc.autoTable({
+    startY: 48,
+    head: [["วันที่", "เวลาเข้า", "เวลาออก", "สถานะ"]],
+    body: tableData,
+    styles: { font: "helvetica", fontSize: 11 },
+    headStyles: { fillColor: [76, 109, 77] },
+  });
+
+  doc.save(`report_${employee.id}_${monthKey}.pdf`);
+}

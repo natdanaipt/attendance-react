@@ -15,7 +15,7 @@
 }
 
 .report-title {
-  font-family: 'Mitr', sans-serif;
+  font-family: "Mitr", sans-serif;
   font-size: 22px;
   font-weight: 300;
   color: var(--green-dark);
@@ -49,7 +49,7 @@
 }
 
 .rpt-month-label {
-  font-family: 'Mitr', sans-serif;
+  font-family: "Mitr", sans-serif;
   font-size: 15px;
   font-weight: 400;
   color: var(--text-mid);
@@ -85,14 +85,57 @@
   border-bottom: 1px solid var(--border-light);
   vertical-align: middle;
 }
-.rpt-table tbody tr:last-child td { border-bottom: none; }
-.rpt-table tbody tr:hover td { background: var(--paper); }
+.rpt-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.rpt-table tbody tr:hover td {
+  background: var(--paper);
+}
 
-.rpt-id   { font-family: 'Mitr', sans-serif; font-size: 12px; color: var(--text-light); }
-.rpt-name { font-weight: 500; color: var(--text-dark); }
-.rpt-dept { color: var(--text-mid); }
-.rpt-num  { font-family: 'Mitr', sans-serif; font-size: 15px; color: var(--text-dark); text-align: center; }
-.rpt-avg  { font-family: 'Mitr', sans-serif; font-size: 13px; color: var(--text-mid); }
+.rpt-id {
+  font-family: "Mitr", sans-serif;
+  font-size: 12px;
+  color: var(--text-light);
+}
+.rpt-name {
+  font-weight: 500;
+  color: var(--text-dark);
+}
+.rpt-dept {
+  color: var(--text-mid);
+}
+.rpt-num {
+  font-family: "Mitr", sans-serif;
+  font-size: 15px;
+  color: var(--text-dark);
+  text-align: center;
+}
+.rpt-avg {
+  font-family: "Mitr", sans-serif;
+  font-size: 13px;
+  color: var(--text-mid);
+}
 
-.rpt-ok   { color: var(--green-dark); font-family: 'Mitr', sans-serif; font-size: 15px; }
-.rpt-late { color: var(--gold);       font-family: 'Mitr', sans-serif; font-size: 15px; }
+.rpt-ok {
+  color: var(--green-dark);
+  font-family: "Mitr", sans-serif;
+  font-size: 15px;
+}
+.rpt-late {
+  color: var(--gold);
+  font-family: "Mitr", sans-serif;
+  font-size: 15px;
+}
+.export-pdf-btn {
+  padding: 8px 16px;
+  background: #4c6d4d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.export-pdf-btn:hover {
+  background: #3a5a3b;
+}

@@ -265,6 +265,8 @@ export default function App() {
             records={myRecords}
             curEmpId={currentEmp.id}
             currentEmp={currentEmp}
+            employees={employees} // ← เพิ่ม
+            isAdmin={isAdmin}
           />
         );
       case "record":
@@ -285,10 +287,17 @@ export default function App() {
             calYear={calYear}
             calMonth={calMonth}
             onDelete={handleDeleteRecord}
+            isAdmin={isAdmin}
           />
         );
       case "report":
-        return <ReportPage records={allRecords} employees={employees} />;
+        return (
+          <ReportPage
+            records={allRecords}
+            employees={employees}
+            isAdmin={isAdmin}
+          />
+        );
       case "employees":
         return (
           <EmployeesPage

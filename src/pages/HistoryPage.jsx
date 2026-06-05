@@ -25,10 +25,11 @@ export default function HistoryPage({
   calYear,
   calMonth,
   onDelete,
+  isAdmin,
 }) {
   const [search, setSearch] = useState("");
   const [filterDate, setFilterDate] = useState("");
-  const [filterType, setFilterType] = useState("all"); // "all" | "in" | "out"
+  const [filterType, setFilterType] = useState("all");
 
   const now = new Date();
   const [exportYear, setExportYear] = useState(now.getFullYear());
@@ -69,34 +70,39 @@ export default function HistoryPage({
             {emp?.name} · {emp?.dept}
           </p>
         </div>
-        <div className="export-group">
-          <select
-            className="export-select"
-            value={exportMonth}
-            onChange={(e) => setExportMonth(Number(e.target.value))}
-          >
-            {TH_MONTHS.map((m, i) => (
-              <option key={i + 1} value={i + 1}>
-                {m}
-              </option>
-            ))}
-          </select>
-          <select
-            className="export-select"
-            value={exportYear}
-            onChange={(e) => setExportYear(Number(e.target.value))}
-          >
-            {yearOptions.map((y) => (
-              <option key={y} value={y}>
-                {y + 543}
-              </option>
-            ))}
-          </select>
-          <button className="export-btn" onClick={handleExportPDF}>
-            ↓ Export PDF
-          </button>
-        </div>
+
+        {/* ── ปุ่ม Export PDF เฉพาะ Admin ── */}
+        {isAdmin && (
+          <div className="export-group">
+            <select
+              className="export-select"
+              value={exportMonth}
+              onChange={(e) => setExportMonth(Number(e.target.value))}
+            >
+              {TH_MONTHS.map((m, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <select
+              className="export-select"
+              value={exportYear}
+              onChange={(e) => setExportYear(Number(e.target.value))}
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>
+                  {y + 543}
+                </option>
+              ))}
+            </select>
+            <button className="export-btn" onClick={handleExportPDF}>
+              ↓ Export PDF
+            </button>
+          </div>
+        )}
       </div>
+      {/* ← ปิด history-page-header */}
 
       <div className="hist-filters">
         <input
@@ -105,7 +111,6 @@ export default function HistoryPage({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        {/* Dropdown กรองประเภท */}
         <select
           className="export-select"
           value={filterType}
