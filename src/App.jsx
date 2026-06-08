@@ -333,7 +333,7 @@ export default function App() {
       {/* Header */}
       <header className="app-header">
         <div className="app-brand">
-          <span>🌿</span>
+          <span>🕐</span>
           <span className="app-brand-text">ITED-TIMEFLOW</span>
         </div>
         <div className="app-user">
