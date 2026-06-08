@@ -55,20 +55,19 @@
 
 .export-btn {
   height: 34px;
-  background: none;
-  border: 1px solid var(--border);
+  background: #4c6d4d;
+  border: none;
   border-radius: 8px;
   padding: 0 14px;
   font-family: "Sarabun", sans-serif;
   font-size: 12px;
-  color: var(--text-mid);
+  color: white;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
 }
 .export-btn:hover {
-  border-color: var(--green-mid);
-  color: var(--green-dark);
+  background: #3a5a3b;
 }
 
 .hist-filters {

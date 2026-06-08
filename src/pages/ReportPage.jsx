@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { getStatus, MONTHS_TH } from "../services/api";
 import "./ReportPage.css";
+import "./HistoryPage.css";
 
 const API_URL = "https://attendance-api-j7q6.onrender.com";
 
@@ -126,7 +127,7 @@ export default function ReportPage({ employees, isAdmin }) {
         <th>รหัส</th>
         <th>ชื่อ-นามสกุล</th>
         <th>แผนก</th>
-        <th>วันที่มา</th>
+        <th>วันที่มาทำงาน</th>
         <th>ตรงเวลา</th>
         <th>สาย</th>
       </tr>
@@ -151,21 +152,35 @@ export default function ReportPage({ employees, isAdmin }) {
     <div className="report-page">
       <div className="report-header">
         <h2 className="report-title">รายงานสรุปรายเดือน</h2>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div className="report-month-nav">
-            <button className="rpt-nav-btn" onClick={() => changeMonth(-1)}>
-              &#8592;
-            </button>
-            <span className="rpt-month-label">
-              {MONTHS_TH[month]} {year + 543}
-            </span>
-            <button className="rpt-nav-btn" onClick={() => changeMonth(1)}>
-              &#8594;
-            </button>
-          </div>
+
+        <div className="export-group">
+          <select
+            className="export-select"
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+          >
+            {MONTHS_TH.map((m, i) => (
+              <option key={i} value={i}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <select
+            className="export-select"
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+          >
+            {Array.from({ length: 5 }, (_, i) => now.getFullYear() - i).map(
+              (y) => (
+                <option key={y} value={y}>
+                  {y + 543}
+                </option>
+              ),
+            )}
+          </select>
           {isAdmin && (
-            <button className="export-pdf-btn" onClick={handleExportPDF}>
-              ⬇ Export PDF
+            <button className="export-btn" onClick={handleExportPDF}>
+              ↓ Export PDF
             </button>
           )}
         </div>
