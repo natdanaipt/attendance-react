@@ -334,7 +334,7 @@ export default function App() {
       <header className="app-header">
         <div className="app-brand">
           <span>🌿</span>
-          <span className="app-brand-text">บันทึกเวลาเข้า-ออกงาน</span>
+          <span className="app-brand-text">ITED-TIMEFLOW</span>
         </div>
         <div className="app-user">
           <span className="app-user-name">

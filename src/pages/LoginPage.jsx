@@ -54,7 +54,7 @@ export default function LoginPage({ employees, onLogin }) {
     <div className="login-wrap">
       <div className="login-box">
         <div className="login-leaf">🕐</div>
-        <h1 className="login-title">บันทึกเวลาเข้า-ออกงาน</h1>
+        <h1 className="login-title">ITED-TIMEFLOW</h1>
         {/* <p className="login-sub">กรอกรหัสพนักงานเพื่อเข้าสู่ระบบ</p> */}
 
         <div className="login-field">
