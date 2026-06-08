@@ -53,7 +53,7 @@ export default function LoginPage({ employees, onLogin }) {
   return (
     <div className="login-wrap">
       <div className="login-box">
-        <div className="login-leaf">🌿</div>
+        <div className="login-leaf">🕐</div>
         <h1 className="login-title">บันทึกเวลาเข้า-ออกงาน</h1>
         {/* <p className="login-sub">กรอกรหัสพนักงานเพื่อเข้าสู่ระบบ</p> */}
 
