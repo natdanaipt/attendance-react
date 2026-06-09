@@ -333,7 +333,7 @@ export default function App() {
       {/* Header */}
       <header className="app-header">
         <div className="app-brand">
-          <img src="/ItedTime.jpg" alt="logo" className="brand-logo" />
+          <img src="/ITED.png" alt="logo" className="brand-logo" />
           <span className="app-brand-text">ITED-TIMEFLOW</span>
         </div>
         <div className="app-user">

@@ -53,7 +53,7 @@ export default function LoginPage({ employees, onLogin }) {
   return (
     <div className="login-wrap">
       <div className="login-box">
-        <img src="/ItedTime.jpg" alt="logo" className="login-logo" />
+        <img src="/ITED.png" alt="logo" className="login-logo" />
         <h1 className="login-title">ITED-TIMEFLOW</h1>
         {/* <p className="login-sub">กรอกรหัสพนักงานเพื่อเข้าสู่ระบบ</p> */}
 
