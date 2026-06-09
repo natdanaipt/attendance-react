@@ -3,15 +3,55 @@ import "./EmployeesPage.css";
 
 const API_URL = "https://attendance-api-j7q6.onrender.com";
 
+const MONTHS_TH = [
+  "มกราคม",
+  "กุมภาพันธ์",
+  "มีนาคม",
+  "เมษายน",
+  "พฤษภาคม",
+  "มิถุนายน",
+  "กรกฎาคม",
+  "สิงหาคม",
+  "กันยายน",
+  "ตุลาคม",
+  "พฤศจิกายน",
+  "ธันวาคม",
+];
+
+function getStatus(time) {
+  const [h, m] = time.split(":").map(Number);
+  const t = h * 60 + m;
+  if (t <= 8 * 60 + 30) return { label: "ตรงเวลา", kind: "ok" };
+  return { label: "มาสาย", kind: "late" };
+}
+
+// สร้างรายการวันย้อนหลัง 60 วัน (เฉพาะวันทำงาน)
+function getPastWorkDays(n = 60) {
+  const result = [];
+  const now = new Date();
+  let d = new Date(now);
+  while (result.length < n) {
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) {
+      result.push(d.toISOString().slice(0, 10));
+    }
+    d.setDate(d.getDate() - 1);
+  }
+  return result; // เรียงจากวันล่าสุดไปเก่า
+}
+
 export default function EmployeesPage({
   employees,
   records,
   onAddEmp,
   onDeleteEmp,
 }) {
-  const [todayRecords, setTodayRecords] = useState([]);
+  const [allRecords, setAllRecords] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
 
-  // ── Filter states ──
+  // Filter states
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("");
   const [filterPos, setFilterPos] = useState("");
@@ -19,11 +59,10 @@ export default function EmployeesPage({
   const [filterTimeTo, setFilterTimeTo] = useState("");
 
   useEffect(() => {
-    async function loadToday() {
+    async function loadRecords() {
       try {
         const res = await fetch(`${API_URL}/api/records`);
         const rows = await res.json();
-        const today = new Date().toISOString().slice(0, 10);
         const mapped = [];
         for (const row of rows) {
           let date;
@@ -33,7 +72,6 @@ export default function EmployeesPage({
             const d = new Date(row.date);
             date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
           }
-          if (date !== today) continue;
           const empId = String(row.emp_id);
           const checkIn = row.check_in
             ? String(row.check_in).slice(0, 5)
@@ -45,17 +83,24 @@ export default function EmployeesPage({
           if (checkOut)
             mapped.push({ empId, date, time: checkOut, type: "out" });
         }
-        setTodayRecords(mapped);
+        setAllRecords(mapped);
       } catch (err) {
-        console.error("โหลด today records ไม่ได้:", err);
+        console.error("โหลด records ไม่ได้:", err);
       }
     }
-    loadToday();
-    const interval = setInterval(loadToday, 5 * 60 * 1000);
+    loadRecords();
+    const interval = setInterval(loadRecords, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // ── unique dept และ pos สำหรับ dropdown ──
+  // records ของวันที่เลือก
+  const dayRecords = useMemo(
+    () => allRecords.filter((r) => r.date === selectedDate),
+    [allRecords, selectedDate],
+  );
+
+  const pastWorkDays = useMemo(() => getPastWorkDays(60), []);
+
   const deptOptions = useMemo(
     () => [...new Set(employees.map((e) => e.dept).filter(Boolean))].sort(),
     [employees],
@@ -66,10 +111,8 @@ export default function EmployeesPage({
     [employees],
   );
 
-  // ── กรองพนักงาน ──
   const filtered = useMemo(() => {
     return employees.filter((e) => {
-      // ค้นหา รหัส / ชื่อ
       if (search) {
         const q = search.toLowerCase();
         if (
@@ -78,17 +121,12 @@ export default function EmployeesPage({
         )
           return false;
       }
-      // กรองแผนก
       if (filterDept && e.dept !== filterDept) return false;
-      // กรองตำแหน่ง
       if (filterPos && e.pos !== filterPos) return false;
-      // กรองเวลาเข้า
       if (filterTimeFrom || filterTimeTo) {
-        const todayIn = todayRecords.find(
-          (r) => r.empId === e.id && r.type === "in",
-        );
-        if (!todayIn) return false;
-        const [h, m] = todayIn.time.split(":").map(Number);
+        const rec = dayRecords.find((r) => r.empId === e.id && r.type === "in");
+        if (!rec) return false;
+        const [h, m] = rec.time.split(":").map(Number);
         const t = h * 60 + m;
         if (filterTimeFrom) {
           const [fh, fm] = filterTimeFrom.split(":").map(Number);
@@ -108,12 +146,107 @@ export default function EmployeesPage({
     filterPos,
     filterTimeFrom,
     filterTimeTo,
-    todayRecords,
+    dayRecords,
   ]);
+
+  // ── Export PDF (ใช้ print เพื่อรองรับภาษาไทย) ──
+  function handleExportPDF() {
+    const dateObj = new Date(selectedDate);
+    const dateLabel = `${dateObj.getDate()} ${MONTHS_TH[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+
+    const rows = filtered
+      .map((e) => {
+        const recIn = dayRecords.find(
+          (r) => r.empId === e.id && r.type === "in",
+        );
+        const recOut = dayRecords.find(
+          (r) => r.empId === e.id && r.type === "out",
+        );
+        const status = recIn ? getStatus(recIn.time).label : "ยังไม่เข้า";
+        const statusColor = recIn
+          ? getStatus(recIn.time).kind === "late"
+            ? "#c0392b"
+            : "#2e7d32"
+          : "#999";
+        return `<tr>
+        <td>${e.id}</td>
+        <td>${e.name || "-"}</td>
+        <td>${e.dept || "-"}</td>
+        <td>${e.pos || "-"}</td>
+        <td>${recIn?.time || "-"}</td>
+        <td>${recOut?.time || "-"}</td>
+        <td style="color:${statusColor};font-weight:600">${status}</td>
+      </tr>`;
+      })
+      .join("");
+
+    const html = `<!DOCTYPE html><html><head>
+      <meta charset="utf-8"/>
+      <title>รายชื่อพนักงาน ${dateLabel}</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap');
+        * { font-family: 'Sarabun', sans-serif; font-size: 12px; }
+        body { padding: 24px; }
+        h2 { font-size: 18px; text-align: center; margin-bottom: 4px; }
+        .sub { font-size: 12px; color: #555; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #3d6b3d; color: white; padding: 8px 10px; text-align: left; }
+        td { padding: 7px 10px; border-bottom: 1px solid #eee; }
+        tr:nth-child(even) td { background: #f9f9f9; }
+        @media print { body { padding: 0; } }
+      </style>
+    </head><body>
+      <h2>รายชื่อพนักงาน</h2>
+      <div class="sub">วันที่: ${dateLabel}${filterDept ? ` &nbsp;|&nbsp; แผนก: ${filterDept}` : ""} &nbsp;|&nbsp; ทั้งหมด ${filtered.length} คน</div>
+      <table>
+        <thead><tr>
+          <th>รหัส</th><th>ชื่อ-นามสกุล</th><th>แผนก</th><th>ตำแหน่ง</th>
+          <th>เวลาเข้า</th><th>เวลาออก</th><th>สถานะ</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </body></html>`;
+
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => {
+      win.focus();
+      win.print();
+    };
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  function formatDateLabel(dateStr) {
+    if (dateStr === today) return "วันนี้";
+    const d = new Date(dateStr);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (dateStr === yesterday.toISOString().slice(0, 10)) return "เมื่อวาน";
+    return `${d.getDate()} ${MONTHS_TH[d.getMonth()]} ${d.getFullYear() + 543}`;
+  }
 
   return (
     <div className="emp-page">
-      <h2 className="emp-title">รายชื่อพนักงาน</h2>
+      {/* ── Header ── */}
+      <div className="emp-header-row">
+        <h2 className="emp-title">รายชื่อพนักงาน</h2>
+        <div className="emp-header-actions">
+          {/* ✅ Date picker เลือกวันได้อิสระ */}
+          <input
+            type="date"
+            className="emp-date-picker"
+            value={selectedDate}
+            max={today}
+            onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+          />
+          {/* ✅ Export PDF */}
+          <button className="export-pdf-btn" onClick={handleExportPDF}>
+            ↓ Export PDF
+          </button>
+        </div>
+      </div>
 
       {/* ── Filter bar ── */}
       <div className="emp-filters">
@@ -172,6 +305,7 @@ export default function EmployeesPage({
             setFilterPos("");
             setFilterTimeFrom("");
             setFilterTimeTo("");
+            setSelectedDate(new Date().toISOString().slice(0, 10));
           }}
         >
           ✕ ล้าง
@@ -187,7 +321,7 @@ export default function EmployeesPage({
               <th>ชื่อ-นามสกุล</th>
               <th>แผนก</th>
               <th>ตำแหน่ง</th>
-              <th>สถานะวันนี้</th>
+              <th>สถานะ {formatDateLabel(selectedDate)}</th>
               <th></th>
             </tr>
           </thead>
@@ -202,10 +336,10 @@ export default function EmployeesPage({
               </tr>
             ) : (
               filtered.map((e) => {
-                const todayIn = todayRecords.find(
+                const recIn = dayRecords.find(
                   (r) => r.empId === e.id && r.type === "in",
                 );
-                const todayOut = todayRecords.find(
+                const recOut = dayRecords.find(
                   (r) => r.empId === e.id && r.type === "out",
                 );
                 return (
@@ -215,19 +349,19 @@ export default function EmployeesPage({
                     <td className="emp-dept">{e.dept || "—"}</td>
                     <td className="emp-pos">{e.pos || "—"}</td>
                     <td>
-                      {todayIn ? (
+                      {recIn ? (
                         <>
                           <span className="entry entry-in">
                             <span className="entry-dot" />
-                            เข้า {todayIn.time}
+                            เข้า {recIn.time}
                           </span>
-                          {todayOut && (
+                          {recOut && (
                             <span
                               className="entry entry-out"
                               style={{ marginLeft: 6 }}
                             >
                               <span className="entry-dot" />
-                              ออก {todayOut.time}
+                              ออก {recOut.time}
                             </span>
                           )}
                         </>

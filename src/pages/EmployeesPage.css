@@ -205,3 +205,55 @@
 .time-input:focus {
   border-color: var(--green-mid);
 }
+
+.emp-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.emp-header-row .emp-title {
+  margin-bottom: 0;
+}
+
+.emp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-pdf-btn {
+  height: 34px;
+  padding: 0 16px;
+  background: var(--green-dark, #3d6b3d);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Sarabun", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.export-pdf-btn:hover {
+  background: var(--green-mid, #6a9b6a);
+}
+.emp-date-picker {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-family: "Sarabun", sans-serif;
+  font-size: 13px;
+  background: var(--warm-white);
+  color: var(--text-dark);
+  outline: none;
+  cursor: pointer;
+}
+.emp-date-picker:focus {
+  border-color: var(--green-mid);
+}
