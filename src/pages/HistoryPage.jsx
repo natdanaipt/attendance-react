@@ -135,6 +135,8 @@ export default function HistoryPage({
             setSearch("");
             setFilterDate("");
             setFilterType("all");
+            setExportMonth(now.getMonth() + 1); // ← เพิ่ม
+            setExportYear(now.getFullYear());
           }}
         >
           ✕ ล้าง
