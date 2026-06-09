@@ -92,3 +92,8 @@
   color: var(--green-dark);
   border-bottom-color: var(--green-dark);
 }
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
