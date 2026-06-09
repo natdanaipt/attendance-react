@@ -60,11 +60,10 @@ export default function ReportPage({ employees, isAdmin }) {
       ).length;
       const onTime = myRecs.length - late;
       const absent = Math.max(0, workDays - days);
-      return { ...e, days, onTime, late, absent };
+      return { ...e, days, onTime, late, absent, workDays };
     });
   }, [records, employees, monthKey, year, month]);
 
-  // ── กรองตาม search ──
   const filteredRows = useMemo(() => {
     if (!search.trim()) return rows;
     const q = search.toLowerCase();
@@ -76,6 +75,7 @@ export default function ReportPage({ employees, isAdmin }) {
   function handleExportPDF() {
     const monthName = MONTHS_TH[month];
     const buddhistYear = year + 543;
+    const workDays = filteredRows[0]?.workDays || 0;
 
     const tableRows = filteredRows
       .map(
@@ -84,6 +84,8 @@ export default function ReportPage({ employees, isAdmin }) {
         <td>${e.id}</td>
         <td>${e.name}</td>
         <td>${e.dept || "-"}</td>
+        <td>${e.pos || "-"}</td>
+        <td style="text-align:center">${e.workDays}</td>
         <td style="text-align:center">${e.days}</td>
         <td style="text-align:center; color:green">${e.onTime}</td>
         <td style="text-align:center; color:#cc0000">${e.late}</td>
@@ -124,6 +126,8 @@ export default function ReportPage({ employees, isAdmin }) {
         <th>รหัส</th>
         <th>ชื่อ-นามสกุล</th>
         <th>แผนก</th>
+        <th>ตำแหน่ง</th>
+        <th>วันทำงานทั้งหมด</th>
         <th>วันที่มา</th>
         <th>ตรงเวลา</th>
         <th>สาย</th>
@@ -183,7 +187,7 @@ export default function ReportPage({ employees, isAdmin }) {
         </div>
       </div>
 
-      {/* ── Search bar ── */}
+      {/* Search */}
       <div className="emp-filters" style={{ marginBottom: "1rem" }}>
         <input
           type="text"
@@ -206,6 +210,8 @@ export default function ReportPage({ employees, isAdmin }) {
               <th>รหัส</th>
               <th>ชื่อ-นามสกุล</th>
               <th>แผนก</th>
+              <th>ตำแหน่ง</th>
+              <th>วันทำงานทั้งหมด</th>
               <th>วันที่มา</th>
               <th>ตรงเวลา</th>
               <th>สาย</th>
@@ -218,6 +224,8 @@ export default function ReportPage({ employees, isAdmin }) {
                 <td className="rpt-id">{e.id}</td>
                 <td className="rpt-name">{e.name}</td>
                 <td className="rpt-dept">{e.dept}</td>
+                <td className="rpt-dept">{e.pos || "—"}</td>
+                <td className="rpt-num">{e.workDays}</td>
                 <td className="rpt-num">{e.days}</td>
                 <td>
                   <span className="rpt-ok">{e.onTime}</span>

@@ -1,0 +1,246 @@
+.adm-dash {
+  padding: 2rem 2.5rem 3rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.adm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.adm-title {
+  font-family: "Mitr", sans-serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--green-dark);
+  font-style: italic;
+}
+
+.adm-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.adm-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+/* ── การ์ด ── */
+.adm-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 2rem;
+}
+
+.adm-card {
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid var(--border-light);
+}
+
+.adm-card-blue {
+  background: #e8f4fd;
+}
+.adm-card-green {
+  background: #eaf4ea;
+}
+.adm-card-gold {
+  background: #fdf8e8;
+}
+.adm-card-red {
+  background: #fdeaea;
+}
+
+.adm-card-num {
+  font-family: "Mitr", sans-serif;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.adm-card-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-mid);
+  margin-top: 4px;
+}
+
+.adm-card-sub {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+/* ── Row ── */
+.adm-row {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+}
+
+.adm-panel {
+  background: var(--warm-white);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.adm-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  margin-bottom: 16px;
+}
+
+/* ── กราฟ ── */
+.adm-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 150px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.adm-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 28px;
+}
+
+.adm-bar-val {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.adm-bar {
+  width: 20px;
+  background: var(--green-mid, #6a9b6a);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: height 0.3s;
+}
+
+.adm-bar-label {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+/* ── Top แผนก ── */
+.adm-top-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.adm-top-rank {
+  font-family: "Mitr", sans-serif;
+  font-size: 13px;
+  color: var(--text-light);
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.adm-top-info {
+  flex: 1;
+}
+
+.adm-top-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adm-top-bar-wrap {
+  background: var(--border-light);
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.adm-top-bar {
+  background: var(--green-mid, #6a9b6a);
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.adm-top-pct {
+  font-family: "Mitr", sans-serif;
+  font-size: 13px;
+  color: var(--green-dark);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Nav Dropdown ── */
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+  display: block;
+}
+
+.nav-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-family: "Sarabun", sans-serif;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.nav-dropdown-item:hover,
+.nav-dropdown-item.active {
+  background: var(--green-faint);
+  color: var(--green-dark);
+}
+
+@media (max-width: 700px) {
+  .adm-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .adm-row {
+    grid-template-columns: 1fr;
+  }
+}

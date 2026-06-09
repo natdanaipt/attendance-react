@@ -6,6 +6,7 @@ import HistoryPage from "./pages/HistoryPage";
 import ReportPage from "./pages/ReportPage";
 import EmployeesPage from "./pages/EmployeesPage";
 import ImportPage from "./pages/ImportPage";
+import AdminDashboard from "./pages/AdminDashboard";
 import {
   initEmployees,
   saveEmployees,
@@ -14,33 +15,36 @@ import {
   bulkImport,
   getRecordsByEmp,
   getAllRecords,
-  fetchRecordsFromSheets, // ← เพิ่ม
-  fetchEmployeesFromSheets, // ← เพิ่ม
+  fetchRecordsFromSheets,
+  fetchEmployeesFromSheets,
 } from "./services/api";
 import "./App.css";
 
-// เมนูพนักงานทั่วไป
 const NAV_USER = [
   { key: "dashboard", label: "📅 ปฏิทิน" },
   { key: "history", label: "📋 ประวัติของฉัน" },
 ];
 
-// เมนู Admin (รหัส ADMIN หรือ 0000)
 const NAV_ADMIN = [
   { key: "dashboard", label: "📅 ปฏิทิน" },
   { key: "history", label: "📋 ประวัติของฉัน" },
-  { key: "report", label: "📈 รายงาน" },
+  {
+    key: "report_group",
+    label: "📈 รายงาน",
+    sub: [
+      { key: "report_dashboard", label: "📊 Dashboard" },
+      { key: "report_monthly", label: "📋 สรุปรายเดือน" },
+    ],
+  },
   { key: "employees", label: "👥 พนักงาน" },
 ];
-
-const ADMIN_IDS = ["ADMIN", "admin", "0000"];
 
 export default function App() {
   const [employees, setEmployees] = useState(() => initEmployees());
   const [currentEmp, setCurrentEmp] = useState(() => {
     const saved = sessionStorage.getItem("currentEmp");
     return saved ? JSON.parse(saved) : null;
-  }); // null = ยังไม่ได้ login
+  });
   const [page, setPage] = useState("dashboard");
   const [toast, setToast] = useState({ msg: "", show: false, error: false });
   const [myRecords, setMyRecords] = useState([]);
@@ -55,21 +59,7 @@ export default function App() {
     currentEmp?.id === "__admin__" || currentEmp?.role === "admin";
   const NAV = isAdmin ? NAV_ADMIN : NAV_USER;
 
-  // เพิ่ม useEffect โหลด employees จาก Sheets ตอนเปิดเว็บ
-  useEffect(() => {
-    async function loadEmps() {
-      try {
-        const sheetEmps = await fetchEmployeesFromSheets();
-        if (sheetEmps.length > 0) {
-          saveEmployees(sheetEmps);
-          setEmployees(sheetEmps);
-        }
-      } catch (err) {
-        console.error("โหลด employees ไม่ได้:", err);
-      }
-    }
-    loadEmps();
-  }, []); // ← [] = รันครั้งเดียวตอนเปิดเว็บ
+  const REPORT_PAGES = ["report_dashboard", "report_monthly"];
 
   useEffect(() => {
     async function loadEmps() {
@@ -86,10 +76,8 @@ export default function App() {
     loadEmps();
   }, []);
 
-  // ── Auto refresh ทุก 5 นาที ──────────────────────
   useEffect(() => {
     if (!currentEmp) return;
-
     async function refresh() {
       try {
         const allRows = await fetchRecordsFromSheets();
@@ -103,71 +91,52 @@ export default function App() {
         console.error("refresh ไม่ได้:", err);
       }
     }
-
-    // รันทันทีตอน login
     refresh();
-
-    // รันซ้ำทุก 5 นาที
     const interval = setInterval(refresh, 5 * 60 * 1000);
-    return () => clearInterval(interval); // cleanup ตอน logout
+    return () => clearInterval(interval);
   }, [currentEmp]);
 
-  // โหลด records เมื่อ login
   useEffect(() => {
     if (!currentEmp) return;
     getRecordsByEmp(currentEmp.id).then(setMyRecords);
   }, [currentEmp]);
-  // โหลดข้อมูลจาก Google Sheets เมื่อ login
+
   useEffect(() => {
     if (!currentEmp) return;
-
     async function loadFromSheets() {
       try {
-        // โหลด employees จาก Sheets (ถ้ายังไม่มีในระบบ)
         const sheetEmps = await fetchEmployeesFromSheets();
         if (sheetEmps.length > 0) {
           saveEmployees(sheetEmps);
           setEmployees(sheetEmps);
         }
-
-        // โหลด records ของคนที่ login แล้ว import เข้า IndexedDB
         const allRows = await fetchRecordsFromSheets();
         const myRows = allRows.filter(
           (r) => String(r.empId) === String(currentEmp.id),
         );
-        if (myRows.length > 0) {
-          await bulkImport(myRows);
-        }
-
-        // โหลด records ของตัวเองมาแสดง
+        if (myRows.length > 0) await bulkImport(myRows);
         const fresh = await getRecordsByEmp(String(currentEmp.id));
         setMyRecords(fresh);
       } catch (err) {
         console.error("โหลดจาก Sheets ไม่ได้:", err);
-        // fallback ใช้ IndexedDB แทน
         const local = await getRecordsByEmp(String(currentEmp.id));
         setMyRecords(local);
       }
     }
-
     loadFromSheets();
   }, [currentEmp]);
 
-  // โหลด all records หน้า report/employees (admin only)
   useEffect(() => {
-    if (page === "report" || page === "employees") {
+    if (REPORT_PAGES.includes(page) || page === "employees") {
       getAllRecords().then(setAllRecords);
     }
   }, [page]);
-  // ── SSO Callback ──────────────────────────────────
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     if (!code) return;
-
-    // ลบ code ออกจาก URL
     window.history.replaceState({}, "", "/");
-
     async function handleSSO() {
       try {
         const res = await fetch(
@@ -185,7 +154,6 @@ export default function App() {
         alert("SSO ไม่สำเร็จ");
       }
     }
-
     handleSSO();
   }, []);
 
@@ -194,7 +162,6 @@ export default function App() {
     setTimeout(() => setToast((t) => ({ ...t, show: false })), 3500);
   }
 
-  // ── Login ──────────────────────────────────────
   function handleLogin(emp) {
     setCurrentEmp(emp);
     sessionStorage.setItem("currentEmp", JSON.stringify(emp));
@@ -209,7 +176,6 @@ export default function App() {
     setPage("dashboard");
   }
 
-  // ── Record actions ─────────────────────────────
   async function handleAddRecord(empId, date, time, type) {
     const emp = employees.find((e) => e.id === empId);
     const rec = await addRecord(empId, date, time, type, emp?.name, emp?.dept);
@@ -247,19 +213,18 @@ export default function App() {
     );
   }
 
-  // ── Employee actions ───────────────────────────
   function handleAddEmp(emp) {
     const updated = [...employees, emp];
     setEmployees(updated);
     saveEmployees(updated);
   }
+
   function handleDeleteEmp(id) {
     const updated = employees.filter((e) => e.id !== id);
     setEmployees(updated);
     saveEmployees(updated);
   }
 
-  // ── Render page ────────────────────────────────
   function renderPage() {
     switch (page) {
       case "dashboard":
@@ -268,17 +233,8 @@ export default function App() {
             records={myRecords}
             curEmpId={currentEmp.id}
             currentEmp={currentEmp}
-            employees={employees} // ← เพิ่ม
-            isAdmin={isAdmin}
-          />
-        );
-      case "record":
-        return (
-          <RecordPage
             employees={employees}
-            curEmpId={currentEmp.id}
-            onAdd={handleAddRecord}
-            showToast={showToast}
+            isAdmin={isAdmin}
           />
         );
       case "history":
@@ -293,7 +249,9 @@ export default function App() {
             isAdmin={isAdmin}
           />
         );
-      case "report":
+      case "report_dashboard":
+        return <AdminDashboard employees={employees} />;
+      case "report_monthly":
         return (
           <ReportPage
             records={allRecords}
@@ -310,27 +268,17 @@ export default function App() {
             onDeleteEmp={handleDeleteEmp}
           />
         );
-      case "import":
-        return (
-          <ImportPage
-            employees={employees}
-            onImport={handleImport}
-            loading={loading}
-          />
-        );
       default:
         return null;
     }
   }
 
-  // ── ยังไม่ได้ login → แสดง LoginPage ──────────
   if (!currentEmp) {
     return <LoginPage employees={employees} onLogin={handleLogin} />;
   }
 
   return (
     <>
-      {/* Header */}
       <header className="app-header">
         <div className="app-brand">
           <img src="/ITED.png" alt="logo" className="brand-logo" />
@@ -349,20 +297,39 @@ export default function App() {
         </div>
       </header>
 
-      {/* Nav tabs */}
       <nav className="app-nav">
-        {NAV.map((n) => (
-          <button
-            key={n.key}
-            className={`nav-tab${page === n.key ? " active" : ""}`}
-            onClick={() => setPage(n.key)}
-          >
-            {n.label}
-          </button>
-        ))}
+        {NAV.map((n) =>
+          n.sub ? (
+            <div key={n.key} className="nav-dropdown">
+              <button
+                className={`nav-tab${REPORT_PAGES.includes(page) ? " active" : ""}`}
+              >
+                {n.label} ▾
+              </button>
+              <div className="nav-dropdown-menu">
+                {n.sub.map((s) => (
+                  <button
+                    key={s.key}
+                    className={`nav-dropdown-item${page === s.key ? " active" : ""}`}
+                    onClick={() => setPage(s.key)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <button
+              key={n.key}
+              className={`nav-tab${page === n.key ? " active" : ""}`}
+              onClick={() => setPage(n.key)}
+            >
+              {n.label}
+            </button>
+          ),
+        )}
       </nav>
 
-      {/* Content */}
       <main>
         {loading ? (
           <div
@@ -380,7 +347,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Toast */}
       <div
         className={`toast${toast.show ? " show" : ""}${toast.error ? " error" : ""}`}
       >
