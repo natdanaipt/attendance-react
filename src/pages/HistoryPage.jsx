@@ -48,9 +48,13 @@ export default function HistoryPage({
     return records
       .filter((r) => {
         if (r.empId !== curEmpId) return false;
-        // ── กรองตามเดือน/ปีที่เลือก ──
-        if (!r.date.startsWith(monthKey)) return false;
-        if (filterDate && r.date !== filterDate) return false;
+        // ถ้าเลือกวันที่เฉพาะ → ไม่ต้องกรองเดือน
+        if (filterDate) {
+          if (r.date !== filterDate) return false;
+        } else {
+          // กรองตามเดือน/ปีที่เลือก
+          if (!r.date.startsWith(monthKey)) return false;
+        }
         if (filterType !== "all" && r.type !== filterType) return false;
         if (search && !r.date.includes(search) && !r.time.includes(search))
           return false;
