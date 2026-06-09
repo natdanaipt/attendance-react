@@ -41,10 +41,15 @@ export default function HistoryPage({
     (_, i) => now.getFullYear() - i,
   );
 
+  // monthKey สำหรับกรองตาราง
+  const monthKey = `${exportYear}-${String(exportMonth).padStart(2, "0")}`;
+
   const myData = useMemo(() => {
     return records
       .filter((r) => {
         if (r.empId !== curEmpId) return false;
+        // ── กรองตามเดือน/ปีที่เลือก ──
+        if (!r.date.startsWith(monthKey)) return false;
         if (filterDate && r.date !== filterDate) return false;
         if (filterType !== "all" && r.type !== filterType) return false;
         if (search && !r.date.includes(search) && !r.time.includes(search))
@@ -55,7 +60,7 @@ export default function HistoryPage({
       .sort(
         (a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time),
       );
-  }, [records, curEmpId, search, filterDate, filterType]);
+  }, [records, curEmpId, search, filterDate, filterType, monthKey]);
 
   const handleExportPDF = () => {
     exportPDF(records, emp, exportYear, exportMonth);
@@ -71,38 +76,37 @@ export default function HistoryPage({
           </p>
         </div>
 
-        {/* ── ปุ่ม Export PDF เฉพาะ Admin ── */}
-        {isAdmin && (
-          <div className="export-group">
-            <select
-              className="export-select"
-              value={exportMonth}
-              onChange={(e) => setExportMonth(Number(e.target.value))}
-            >
-              {TH_MONTHS.map((m, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <select
-              className="export-select"
-              value={exportYear}
-              onChange={(e) => setExportYear(Number(e.target.value))}
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>
-                  {y + 543}
-                </option>
-              ))}
-            </select>
+        <div className="export-group">
+          <select
+            className="export-select"
+            value={exportMonth}
+            onChange={(e) => setExportMonth(Number(e.target.value))}
+          >
+            {TH_MONTHS.map((m, i) => (
+              <option key={i + 1} value={i + 1}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <select
+            className="export-select"
+            value={exportYear}
+            onChange={(e) => setExportYear(Number(e.target.value))}
+          >
+            {yearOptions.map((y) => (
+              <option key={y} value={y}>
+                {y + 543}
+              </option>
+            ))}
+          </select>
+          {/* Export PDF เฉพาะ Admin */}
+          {isAdmin && (
             <button className="export-btn" onClick={handleExportPDF}>
               ↓ Export PDF
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-      {/* ← ปิด history-page-header */}
 
       <div className="hist-filters">
         <input
