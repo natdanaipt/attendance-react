@@ -10,6 +10,7 @@ export default function ReportPage({ employees, isAdmin }) {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [records, setRecords] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     async function loadRecords() {
@@ -63,11 +64,20 @@ export default function ReportPage({ employees, isAdmin }) {
     });
   }, [records, employees, monthKey, year, month]);
 
+  // ── กรองตาม search ──
+  const filteredRows = useMemo(() => {
+    if (!search.trim()) return rows;
+    const q = search.toLowerCase();
+    return rows.filter(
+      (e) => e.id.toLowerCase().includes(q) || e.name.toLowerCase().includes(q),
+    );
+  }, [rows, search]);
+
   function handleExportPDF() {
     const monthName = MONTHS_TH[month];
     const buddhistYear = year + 543;
 
-    const tableRows = rows
+    const tableRows = filteredRows
       .map(
         (e) => `
       <tr>
@@ -173,6 +183,22 @@ export default function ReportPage({ employees, isAdmin }) {
         </div>
       </div>
 
+      {/* ── Search bar ── */}
+      <div className="emp-filters" style={{ marginBottom: "1rem" }}>
+        <input
+          type="text"
+          placeholder="🔍 ค้นหารหัส หรือ ชื่อ-นามสกุล..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="emp-search"
+        />
+        {search && (
+          <button className="clear-btn" onClick={() => setSearch("")}>
+            ✕ ล้าง
+          </button>
+        )}
+      </div>
+
       <div className="rpt-table-wrap">
         <table className="rpt-table">
           <thead>
@@ -187,7 +213,7 @@ export default function ReportPage({ employees, isAdmin }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((e) => (
+            {filteredRows.map((e) => (
               <tr key={e.id}>
                 <td className="rpt-id">{e.id}</td>
                 <td className="rpt-name">{e.name}</td>
