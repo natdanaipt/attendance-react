@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { getStatus, MONTHS_TH } from "../services/api";
+import { getStatus, MONTHS_TH, countWorkDays } from "../services/api";
 import "./ReportPage.css";
 import "./HistoryPage.css";
 
@@ -11,7 +11,6 @@ export default function ReportPage({ employees, isAdmin }) {
   const [month, setMonth] = useState(now.getMonth());
   const [records, setRecords] = useState([]);
 
-  // ── ดึง records จาก PostgreSQL โดยตรง ──
   useEffect(() => {
     async function loadRecords() {
       try {
@@ -51,6 +50,7 @@ export default function ReportPage({ employees, isAdmin }) {
     const inRecs = records.filter(
       (r) => r.date.startsWith(monthKey) && r.type === "in",
     );
+    const workDays = countWorkDays(year, month);
     return employees.map((e) => {
       const myRecs = inRecs.filter((r) => r.empId === e.id);
       const days = [...new Set(myRecs.map((r) => r.date))].length;
@@ -58,24 +58,10 @@ export default function ReportPage({ employees, isAdmin }) {
         (r) => getStatus(r.time).kind === "late",
       ).length;
       const onTime = myRecs.length - late;
-      return { ...e, days, onTime, late };
+      const absent = Math.max(0, workDays - days);
+      return { ...e, days, onTime, late, absent };
     });
-  }, [records, employees, monthKey]);
-
-  function changeMonth(dir) {
-    let m = month + dir;
-    let y = year;
-    if (m > 11) {
-      m = 0;
-      y++;
-    }
-    if (m < 0) {
-      m = 11;
-      y--;
-    }
-    setMonth(m);
-    setYear(y);
-  }
+  }, [records, employees, monthKey, year, month]);
 
   function handleExportPDF() {
     const monthName = MONTHS_TH[month];
@@ -91,6 +77,7 @@ export default function ReportPage({ employees, isAdmin }) {
         <td style="text-align:center">${e.days}</td>
         <td style="text-align:center; color:green">${e.onTime}</td>
         <td style="text-align:center; color:#cc0000">${e.late}</td>
+        <td style="text-align:center; color:#cc0000">${e.absent}</td>
       </tr>
     `,
       )
@@ -127,9 +114,10 @@ export default function ReportPage({ employees, isAdmin }) {
         <th>รหัส</th>
         <th>ชื่อ-นามสกุล</th>
         <th>แผนก</th>
-        <th>วันที่มาทำงาน</th>
+        <th>วันที่มา</th>
         <th>ตรงเวลา</th>
         <th>สาย</th>
+        <th>ขาด</th>
       </tr>
     </thead>
     <tbody>${tableRows}</tbody>
@@ -152,7 +140,6 @@ export default function ReportPage({ employees, isAdmin }) {
     <div className="report-page">
       <div className="report-header">
         <h2 className="report-title">รายงานสรุปรายเดือน</h2>
-
         <div className="export-group">
           <select
             className="export-select"
@@ -196,6 +183,7 @@ export default function ReportPage({ employees, isAdmin }) {
               <th>วันที่มา</th>
               <th>ตรงเวลา</th>
               <th>สาย</th>
+              <th>ขาด</th>
             </tr>
           </thead>
           <tbody>
@@ -210,6 +198,9 @@ export default function ReportPage({ employees, isAdmin }) {
                 </td>
                 <td>
                   <span className="rpt-late">{e.late}</span>
+                </td>
+                <td>
+                  <span className="rpt-absent">{e.absent}</span>
                 </td>
               </tr>
             ))}

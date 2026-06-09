@@ -142,3 +142,8 @@
 .export-pdf-btn:hover {
   background: #3a5a3b;
 }
+.rpt-absent {
+  color: #cc0000;
+  font-family: "Mitr", sans-serif;
+  font-size: 15px;
+}
