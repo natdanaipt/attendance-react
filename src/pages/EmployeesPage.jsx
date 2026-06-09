@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import "./EmployeesPage.css";
 
 const API_URL = "https://attendance-api-j7q6.onrender.com";
@@ -9,14 +9,14 @@ export default function EmployeesPage({
   onAddEmp,
   onDeleteEmp,
 }) {
-  const [eId, setEId] = useState("");
-  const [eName, setEName] = useState("");
-  const [eDept, setEDept] = useState("");
-  const [ePos, setEPos] = useState("");
-  const [err, setErr] = useState("");
-
-  // ── ดึง records วันนี้จาก PostgreSQL โดยตรง ──
   const [todayRecords, setTodayRecords] = useState([]);
+
+  // ── Filter states ──
+  const [search, setSearch] = useState("");
+  const [filterDept, setFilterDept] = useState("");
+  const [filterPos, setFilterPos] = useState("");
+  const [filterTimeFrom, setFilterTimeFrom] = useState("");
+  const [filterTimeTo, setFilterTimeTo] = useState("");
 
   useEffect(() => {
     async function loadToday() {
@@ -24,7 +24,6 @@ export default function EmployeesPage({
         const res = await fetch(`${API_URL}/api/records`);
         const rows = await res.json();
         const today = new Date().toISOString().slice(0, 10);
-
         const mapped = [];
         for (const row of rows) {
           let date;
@@ -35,7 +34,6 @@ export default function EmployeesPage({
             date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
           }
           if (date !== today) continue;
-
           const empId = String(row.emp_id);
           const checkIn = row.check_in
             ? String(row.check_in).slice(0, 5)
@@ -43,7 +41,6 @@ export default function EmployeesPage({
           const checkOut = row.check_out
             ? String(row.check_out).slice(0, 5)
             : null;
-
           if (checkIn) mapped.push({ empId, date, time: checkIn, type: "in" });
           if (checkOut)
             mapped.push({ empId, date, time: checkOut, type: "out" });
@@ -53,86 +50,135 @@ export default function EmployeesPage({
         console.error("โหลด today records ไม่ได้:", err);
       }
     }
-
     loadToday();
-    // refresh ทุก 5 นาที
     const interval = setInterval(loadToday, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const today = new Date().toISOString().slice(0, 10);
+  // ── unique dept และ pos สำหรับ dropdown ──
+  const deptOptions = useMemo(
+    () => [...new Set(employees.map((e) => e.dept).filter(Boolean))].sort(),
+    [employees],
+  );
 
-  function handleAdd() {
-    if (!eId.trim() || !eName.trim()) {
-      setErr("กรุณากรอกรหัสและชื่อ");
-      return;
-    }
-    if (employees.find((e) => e.id === eId.trim())) {
-      setErr("รหัสพนักงานซ้ำ");
-      return;
-    }
-    onAddEmp({
-      id: eId.trim(),
-      name: eName.trim(),
-      dept: eDept.trim(),
-      pos: ePos.trim(),
+  const posOptions = useMemo(
+    () => [...new Set(employees.map((e) => e.pos).filter(Boolean))].sort(),
+    [employees],
+  );
+
+  // ── กรองพนักงาน ──
+  const filtered = useMemo(() => {
+    return employees.filter((e) => {
+      // ค้นหา รหัส / ชื่อ
+      if (search) {
+        const q = search.toLowerCase();
+        if (
+          !e.id.toLowerCase().includes(q) &&
+          !e.name.toLowerCase().includes(q)
+        )
+          return false;
+      }
+      // กรองแผนก
+      if (filterDept && e.dept !== filterDept) return false;
+      // กรองตำแหน่ง
+      if (filterPos && e.pos !== filterPos) return false;
+      // กรองเวลาเข้า
+      if (filterTimeFrom || filterTimeTo) {
+        const todayIn = todayRecords.find(
+          (r) => r.empId === e.id && r.type === "in",
+        );
+        if (!todayIn) return false;
+        const [h, m] = todayIn.time.split(":").map(Number);
+        const t = h * 60 + m;
+        if (filterTimeFrom) {
+          const [fh, fm] = filterTimeFrom.split(":").map(Number);
+          if (t < fh * 60 + fm) return false;
+        }
+        if (filterTimeTo) {
+          const [th, tm] = filterTimeTo.split(":").map(Number);
+          if (t > th * 60 + tm) return false;
+        }
+      }
+      return true;
     });
-    setEId("");
-    setEName("");
-    setEDept("");
-    setEPos("");
-    setErr("");
-  }
+  }, [
+    employees,
+    search,
+    filterDept,
+    filterPos,
+    filterTimeFrom,
+    filterTimeTo,
+    todayRecords,
+  ]);
 
   return (
     <div className="emp-page">
       <h2 className="emp-title">รายชื่อพนักงาน</h2>
 
-      {/* Add form */}
-      {/* <div className="emp-form-panel">
-        <div className="emp-form-title">เพิ่มพนักงานใหม่</div>
-        {err && <div className="emp-err">{err}</div>}
-        <div className="emp-form-row">
-          <div className="field-sm">
-            <label>รหัส</label>
-            <input
-              value={eId}
-              onChange={(e) => setEId(e.target.value)}
-              placeholder="EMP007"
-            />
-          </div>
-          <div className="field-sm">
-            <label>ชื่อ-นามสกุล</label>
-            <input
-              value={eName}
-              onChange={(e) => setEName(e.target.value)}
-              placeholder="ชื่อ นามสกุล"
-              style={{ width: 180 }}
-            />
-          </div>
-          <div className="field-sm">
-            <label>แผนก</label>
-            <input
-              value={eDept}
-              onChange={(e) => setEDept(e.target.value)}
-              placeholder="แผนก"
-            />
-          </div>
-          <div className="field-sm">
-            <label>ตำแหน่ง</label>
-            <input
-              value={ePos}
-              onChange={(e) => setEPos(e.target.value)}
-              placeholder="ตำแหน่ง"
-            />
-          </div>
-          <button className="save-btn" onClick={handleAdd}>
-            + เพิ่ม
-          </button>
+      {/* ── Filter bar ── */}
+      <div className="emp-filters">
+        <input
+          type="text"
+          placeholder="🔍 ค้นหารหัส หรือ ชื่อ-นามสกุล..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="emp-search"
+        />
+        <select
+          className="export-select"
+          value={filterDept}
+          onChange={(e) => setFilterDept(e.target.value)}
+        >
+          <option value="">ทุกแผนก</option>
+          {deptOptions.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
+        <select
+          className="export-select"
+          value={filterPos}
+          onChange={(e) => setFilterPos(e.target.value)}
+        >
+          <option value="">ทุกตำแหน่ง</option>
+          {posOptions.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+        <div className="time-range">
+          <span>เวลาเข้า</span>
+          <input
+            type="time"
+            value={filterTimeFrom}
+            onChange={(e) => setFilterTimeFrom(e.target.value)}
+            className="time-input"
+          />
+          <span>ถึง</span>
+          <input
+            type="time"
+            value={filterTimeTo}
+            onChange={(e) => setFilterTimeTo(e.target.value)}
+            className="time-input"
+          />
         </div>
-      </div> */}
+        <button
+          className="clear-btn"
+          onClick={() => {
+            setSearch("");
+            setFilterDept("");
+            setFilterPos("");
+            setFilterTimeFrom("");
+            setFilterTimeTo("");
+          }}
+        >
+          ✕ ล้าง
+        </button>
+      </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       <div className="emp-table-wrap">
         <table className="emp-table">
           <thead>
@@ -146,17 +192,16 @@ export default function EmployeesPage({
             </tr>
           </thead>
           <tbody>
-            {employees.length === 0 ? (
+            {filtered.length === 0 ? (
               <tr>
                 <td colSpan={6}>
                   <div className="empty-msg">
-                    <div className="empty-icon">🌱</div>ยังไม่มีพนักงาน
+                    <div className="empty-icon">🌱</div>ไม่พบพนักงาน
                   </div>
                 </td>
               </tr>
             ) : (
-              employees.map((e) => {
-                // ใช้ todayRecords จาก PostgreSQL แทน records จาก IndexedDB
+              filtered.map((e) => {
                 const todayIn = todayRecords.find(
                   (r) => r.empId === e.id && r.type === "in",
                 );
