@@ -54,6 +54,7 @@ export default function App() {
   const now = new Date();
   const [calYear] = useState(now.getFullYear());
   const [calMonth] = useState(now.getMonth());
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const isAdmin =
     currentEmp?.id === "__admin__" || currentEmp?.role === "admin";
@@ -303,20 +304,26 @@ export default function App() {
             <div key={n.key} className="nav-dropdown">
               <button
                 className={`nav-tab${REPORT_PAGES.includes(page) ? " active" : ""}`}
+                onClick={() => setDropdownOpen((prev) => !prev)}
               >
                 {n.label} ▾
               </button>
-              <div className="nav-dropdown-menu">
-                {n.sub.map((s) => (
-                  <button
-                    key={s.key}
-                    className={`nav-dropdown-item${page === s.key ? " active" : ""}`}
-                    onClick={() => setPage(s.key)}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
+              {dropdownOpen && (
+                <div className="nav-dropdown-menu">
+                  {n.sub.map((s) => (
+                    <button
+                      key={s.key}
+                      className={`nav-dropdown-item${page === s.key ? " active" : ""}`}
+                      onClick={() => {
+                        setPage(s.key);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <button
