@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import RecordPage from "./pages/RecordPage";
@@ -56,11 +56,25 @@ export default function App() {
   const [calMonth] = useState(now.getMonth());
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // ✅ เพิ่ม ref สำหรับตรวจจับการคลิกข้างนอก
+  const dropdownRef = useRef(null);
+
   const isAdmin =
     currentEmp?.id === "__admin__" || currentEmp?.role === "admin";
   const NAV = isAdmin ? NAV_ADMIN : NAV_USER;
 
   const REPORT_PAGES = ["report_dashboard", "report_monthly"];
+
+  // ✅ ปิด dropdown เมื่อคลิกข้างนอก
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     async function loadEmps() {
@@ -301,19 +315,50 @@ export default function App() {
       <nav className="app-nav">
         {NAV.map((n) =>
           n.sub ? (
-            <div key={n.key} className="nav-dropdown">
+            // ✅ เพิ่ม position: relative และ ref เพื่อให้ dropdown วางตำแหน่งถูกต้อง
+            <div
+              key={n.key}
+              className="nav-dropdown"
+              ref={dropdownRef}
+              style={{ position: "relative" }}
+            >
               <button
                 className={`nav-tab${REPORT_PAGES.includes(page) ? " active" : ""}`}
-                onClick={() => setDropdownOpen((prev) => !prev)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDropdownOpen((prev) => !prev);
+                }}
               >
                 {n.label} ▾
               </button>
               {dropdownOpen && (
-                <div className="nav-dropdown-menu">
+                <div
+                  className="nav-dropdown-menu"
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    background: "white",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    zIndex: 9999,
+                    minWidth: "160px",
+                  }}
+                >
                   {n.sub.map((s) => (
                     <button
                       key={s.key}
-                      className={`nav-dropdown-item${page === s.key ? " active" : ""}`}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "10px 16px",
+                        textAlign: "left",
+                        background: "none",
+                        border: "none",
+                        fontSize: "14px",
+                        cursor: "pointer",
+                      }}
                       onClick={() => {
                         setPage(s.key);
                         setDropdownOpen(false);
