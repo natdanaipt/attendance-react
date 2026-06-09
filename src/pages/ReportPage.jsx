@@ -128,7 +128,7 @@ export default function ReportPage({ employees, isAdmin }) {
         <th>แผนก</th>
         <th>ตำแหน่ง</th>
         <th>วันทำงานทั้งหมด</th>
-        <th>วันที่มา</th>
+        <th>วันที่มาทำงาน</th>
         <th>ตรงเวลา</th>
         <th>สาย</th>
         <th>ขาด</th>
@@ -212,7 +212,7 @@ export default function ReportPage({ employees, isAdmin }) {
               <th>แผนก</th>
               <th>ตำแหน่ง</th>
               <th>วันทำงานทั้งหมด</th>
-              <th>วันที่มา</th>
+              <th>วันที่มาทำงาน</th>
               <th>ตรงเวลา</th>
               <th>สาย</th>
               <th>ขาด</th>
