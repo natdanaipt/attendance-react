@@ -17,6 +17,7 @@ export default function AdminDashboard({ employees }) {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [filterDept, setFilterDept] = useState("");
+  const [filterDay, setFilterDay] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -64,23 +65,60 @@ export default function AdminDashboard({ employees }) {
 
   const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
 
-  // ── วันนี้ ──
+  const workDaysInMonth = useMemo(() => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const result = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const dow = new Date(ds).getDay();
+      if (dow === 0 || dow === 6 || isHoliday(ds)) continue;
+      if (new Date(ds) > now) break;
+      result.push({ day: d, dateStr: ds });
+    }
+    return result;
+  }, [year, month]);
+
+  const selectedDateStr = filterDay
+    ? `${year}-${String(month + 1).padStart(2, "0")}-${String(filterDay).padStart(2, "0")}`
+    : today;
+
   const todayStats = useMemo(() => {
     const empIds = new Set(filteredEmps.map((e) => e.id));
-    const todayIn = records.filter(
-      (r) => r.date === today && r.type === "in" && empIds.has(r.empId),
-    );
-    const came = new Set(todayIn.map((r) => r.empId)).size;
-    const late = todayIn.filter(
-      (r) => getStatus(r.time).kind === "late",
-    ).length;
-    const onTime = came - late;
-    const total = filteredEmps.length;
-    const absent = total - came;
-    return { came, onTime, late, absent, total };
-  }, [records, filteredEmps, today]);
 
-  // ── เดือนนี้ ──
+    if (filterDay) {
+      // โหมดรายวัน: นับเฉพาะวันที่เลือก
+      const todayIn = records.filter(
+        (r) =>
+          r.date === selectedDateStr && r.type === "in" && empIds.has(r.empId),
+      );
+      const came = new Set(todayIn.map((r) => r.empId)).size;
+      const late = todayIn.filter(
+        (r) => getStatus(r.time).kind === "late",
+      ).length;
+      const onTime = came - late;
+      const total = filteredEmps.length;
+      const absent = total - came;
+      return { came, onTime, late, absent, total };
+    } else {
+      // โหมดภาพรวมทั้งเดือน: มาวันนี้/ยังไม่มา = วันนี้, ตรงเวลา/สาย = รวมทั้งเดือน
+      const todayIn = records.filter(
+        (r) => r.date === today && r.type === "in" && empIds.has(r.empId),
+      );
+      const monthIn = records.filter(
+        (r) =>
+          r.date.startsWith(monthKey) && r.type === "in" && empIds.has(r.empId),
+      );
+      const came = new Set(todayIn.map((r) => r.empId)).size;
+      const late = monthIn.filter(
+        (r) => getStatus(r.time).kind === "late",
+      ).length;
+      const onTime = monthIn.length - late;
+      const total = filteredEmps.length;
+      const absent = total - came;
+      return { came, onTime, late, absent, total };
+    }
+  }, [records, filteredEmps, today, filterDay, selectedDateStr, monthKey]);
+
   const monthStats = useMemo(() => {
     const empIds = new Set(filteredEmps.map((e) => e.id));
     const inRecs = records.filter(
@@ -106,30 +144,20 @@ export default function AdminDashboard({ employees }) {
     return { totalCame, totalLate, totalOnTime, totalAbsent, workDays };
   }, [records, filteredEmps, monthKey, year, month]);
 
-  // ── กราฟรายวัน ──
   const dailyData = useMemo(() => {
     const empIds = new Set(filteredEmps.map((e) => e.id));
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const result = [];
-    for (let d = 1; d <= daysInMonth; d++) {
-      const ds = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      const dow = new Date(ds).getDay();
-      if (dow === 0 || dow === 6 || isHoliday(ds)) continue;
-      const dt = new Date(ds);
-      if (dt > now) break;
+    return workDaysInMonth.map(({ day, dateStr }) => {
       const came = new Set(
         records
           .filter(
-            (r) => r.date === ds && r.type === "in" && empIds.has(r.empId),
+            (r) => r.date === dateStr && r.type === "in" && empIds.has(r.empId),
           )
           .map((r) => r.empId),
       ).size;
-      result.push({ date: d, came, total: filteredEmps.length });
-    }
-    return result;
-  }, [records, filteredEmps, year, month]);
+      return { date: day, dateStr, came, total: filteredEmps.length };
+    });
+  }, [records, filteredEmps, workDaysInMonth]);
 
-  // ── Top แผนก ──
   const topDepts = useMemo(() => {
     const empIds = new Set(filteredEmps.map((e) => e.id));
     const inRecs = records.filter(
@@ -160,7 +188,6 @@ export default function AdminDashboard({ employees }) {
 
   return (
     <div className="adm-dash">
-      {/* ── Header + Filter ── */}
       <div className="adm-header">
         <h2 className="adm-title">📊 Dashboard ภาพรวม</h2>
         <div className="adm-filters">
@@ -179,7 +206,10 @@ export default function AdminDashboard({ employees }) {
           <select
             className="export-select"
             value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
+            onChange={(e) => {
+              setMonth(Number(e.target.value));
+              setFilterDay("");
+            }}
           >
             {MONTHS_TH.map((m, i) => (
               <option key={i} value={i}>
@@ -190,7 +220,10 @@ export default function AdminDashboard({ employees }) {
           <select
             className="export-select"
             value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
+            onChange={(e) => {
+              setYear(Number(e.target.value));
+              setFilterDay("");
+            }}
           >
             {Array.from({ length: 3 }, (_, i) => now.getFullYear() - i).map(
               (y) => (
@@ -200,24 +233,49 @@ export default function AdminDashboard({ employees }) {
               ),
             )}
           </select>
+          <select
+            className="export-select"
+            value={filterDay}
+            onChange={(e) => setFilterDay(e.target.value)}
+          >
+            <option value="">ภาพรวมทั้งเดือน</option>
+            {workDaysInMonth.map(({ day, dateStr }) => (
+              <option key={dateStr} value={day}>
+                วันที่ {day} {MONTHS_TH[month]} {year + 543}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* ── การ์ดวันนี้ ── */}
-      <div className="adm-section-title">วันนี้ — {today}</div>
+      <div className="adm-section-title">
+        {filterDay
+          ? `วันที่ ${filterDay} ${MONTHS_TH[month]} ${year + 543}`
+          : `วันนี้ — ${today}`}
+      </div>
+
+      {/* การ์ด — label เปลี่ยนตาม mode */}
       <div className="adm-cards">
         <div className="adm-card adm-card-blue">
           <div className="adm-card-num">{todayStats.came}</div>
-          <div className="adm-card-label">มาวันนี้</div>
+          <div className="adm-card-label">
+            {filterDay ? "มาวันนี้" : "มาวันนี้"}
+          </div>
           <div className="adm-card-sub">จาก {todayStats.total} คน</div>
         </div>
         <div className="adm-card adm-card-green">
           <div className="adm-card-num">{todayStats.onTime}</div>
-          <div className="adm-card-label">ตรงเวลา</div>
+          <div className="adm-card-label">
+            {filterDay ? "ตรงเวลา" : "ครั้งที่ตรงเวลา"}
+          </div>
+          {!filterDay && <div className="adm-card-sub">รวมทั้งเดือน</div>}
         </div>
         <div className="adm-card adm-card-gold">
           <div className="adm-card-num">{todayStats.late}</div>
-          <div className="adm-card-label">มาสาย</div>
+          <div className="adm-card-label">
+            {filterDay ? "มาสาย" : "ครั้งที่สาย"}
+          </div>
+          {!filterDay && <div className="adm-card-sub">รวมทั้งเดือน</div>}
         </div>
         <div className="adm-card adm-card-red">
           <div className="adm-card-num">{todayStats.absent}</div>
@@ -225,21 +283,28 @@ export default function AdminDashboard({ employees }) {
         </div>
       </div>
 
-      {/* ── กราฟ + Top แผนก ── */}
       <div className="adm-row">
-        {/* กราฟรายวัน */}
         <div className="adm-panel adm-chart-panel">
           <div className="adm-panel-title">
             จำนวนคนมาทำงานรายวัน — {MONTHS_TH[month]} {year + 543}
           </div>
           <div className="adm-chart">
             {dailyData.map((d, i) => (
-              <div key={i} className="adm-bar-wrap">
+              <div
+                key={i}
+                className={`adm-bar-wrap${filterDay && String(d.date) === String(filterDay) ? " adm-bar-wrap--active" : ""}`}
+                onClick={() =>
+                  setFilterDay(
+                    filterDay === String(d.date) ? "" : String(d.date),
+                  )
+                }
+                title={`วันที่ ${d.date}: ${d.came} คน`}
+              >
                 <div className="adm-bar-val">{d.came}</div>
                 <div
                   className="adm-bar"
                   style={{
-                    height: `${Math.round((d.came / maxCame) * 120)}px`,
+                    height: `${Math.round((d.came / maxCame) * 180)}px`,
                   }}
                 />
                 <div className="adm-bar-label">{d.date}</div>
@@ -248,7 +313,6 @@ export default function AdminDashboard({ employees }) {
           </div>
         </div>
 
-        {/* Top แผนก */}
         <div className="adm-panel adm-top-panel">
           <div className="adm-panel-title">Top แผนกที่มาครบที่สุด</div>
           {topDepts.map((d, i) => (
