@@ -33,7 +33,9 @@ function getPastWorkDays(n = 60) {
   while (result.length < n) {
     const dow = d.getDay();
     if (dow !== 0 && dow !== 6) {
-      result.push(d.toISOString().slice(0, 10));
+      result.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+      );
     }
     d.setDate(d.getDate() - 1);
   }
@@ -47,9 +49,7 @@ export default function EmployeesPage({
   onDeleteEmp,
 }) {
   const [allRecords, setAllRecords] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  const [selectedDate, setSelectedDate] = useState(() => getLocalDateStr());
 
   // Filter states
   const [search, setSearch] = useState("");
@@ -226,7 +226,7 @@ export default function EmployeesPage({
     const d = new Date(dateStr);
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    if (dateStr === yesterday.toISOString().slice(0, 10)) return "เมื่อวาน";
+    if (dateStr === getLocalDateStr(yesterday)) return "เมื่อวาน";
     return `${d.getDate()} ${MONTHS_TH[d.getMonth()]} ${d.getFullYear() + 543}`;
   }
 
@@ -308,7 +308,7 @@ export default function EmployeesPage({
             setFilterPos("");
             setFilterTimeFrom("");
             setFilterTimeTo("");
-            setSelectedDate(new Date().toISOString().slice(0, 10));
+            setSelectedDate(getLocalDateStr());
           }}
         >
           ✕ ล้าง

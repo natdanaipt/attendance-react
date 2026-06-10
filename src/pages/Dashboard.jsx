@@ -9,7 +9,9 @@ import {
   fetchRecordsByEmp,
 } from "../services/api";
 import { exportPDF } from "../services/exportPDF";
-
+function getLocalDateStr(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 export default function Dashboard({
   records,
   curEmpId,
@@ -25,8 +27,11 @@ export default function Dashboard({
   const [selectedEmpId, setSelectedEmpId] = useState(curEmpId);
   const [adminRecords, setAdminRecords] = useState([]);
   const [loadingRecs, setLoadingRecs] = useState(false);
+  function getLocalDateStr(d = new Date()) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
 
-  const today = now.toISOString().slice(0, 10);
+  const today = getLocalDateStr(now);
   const monthKey = `${calYear}-${String(calMonth + 1).padStart(2, "0")}`;
 
   // โหลด records เมื่อ Admin เปลี่ยนพนักงานที่เลือก
