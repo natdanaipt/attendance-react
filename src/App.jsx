@@ -239,6 +239,26 @@ export default function App() {
     setEmployees(updated);
     saveEmployees(updated);
   }
+  async function handleUpdateEmp(id, dept, pos) {
+    try {
+      const res = await fetch(
+        `https://attendance-api-j7q6.onrender.com/api/employees/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dept, pos }),
+        },
+      );
+      if (!res.ok) throw new Error("Update failed");
+      const updated = employees.map((e) =>
+        e.id === id ? { ...e, dept, pos } : e,
+      );
+      setEmployees(updated);
+      saveEmployees(updated);
+    } catch (err) {
+      alert("แก้ไขไม่สำเร็จ: " + err.message);
+    }
+  }
 
   function renderPage() {
     switch (page) {
@@ -281,6 +301,8 @@ export default function App() {
             records={allRecords}
             onAddEmp={handleAddEmp}
             onDeleteEmp={handleDeleteEmp}
+            onUpdateEmp={handleUpdateEmp}
+            isAdmin={isAdmin}
           />
         );
       default:

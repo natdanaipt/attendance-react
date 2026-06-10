@@ -25,7 +25,6 @@ function getStatus(time) {
   return { label: "มาสาย", kind: "late" };
 }
 
-// สร้างรายการวันย้อนหลัง 60 วัน (เฉพาะวันทำงาน)
 function getPastWorkDays(n = 60) {
   const result = [];
   const now = new Date();
@@ -39,7 +38,11 @@ function getPastWorkDays(n = 60) {
     }
     d.setDate(d.getDate() - 1);
   }
-  return result; // เรียงจากวันล่าสุดไปเก่า
+  return result;
+}
+
+function getLocalDateStr(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export default function EmployeesPage({
@@ -47,6 +50,8 @@ export default function EmployeesPage({
   records,
   onAddEmp,
   onDeleteEmp,
+  onUpdateEmp,
+  isAdmin,
 }) {
   const [allRecords, setAllRecords] = useState([]);
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateStr());
@@ -57,6 +62,10 @@ export default function EmployeesPage({
   const [filterPos, setFilterPos] = useState("");
   const [filterTimeFrom, setFilterTimeFrom] = useState("");
   const [filterTimeTo, setFilterTimeTo] = useState("");
+  const [editModal, setEditModal] = useState(null); // { id, name, dept, pos }
+  const [saving, setSaving] = useState(false);
+
+  const today = getLocalDateStr();
 
   useEffect(() => {
     async function loadRecords() {
@@ -93,7 +102,6 @@ export default function EmployeesPage({
     return () => clearInterval(interval);
   }, []);
 
-  // records ของวันที่เลือก
   const dayRecords = useMemo(
     () => allRecords.filter((r) => r.date === selectedDate),
     [allRecords, selectedDate],
@@ -149,7 +157,6 @@ export default function EmployeesPage({
     dayRecords,
   ]);
 
-  // ── Export PDF (ใช้ print เพื่อรองรับภาษาไทย) ──
   function handleExportPDF() {
     const dateObj = new Date(selectedDate);
     const dateLabel = `${dateObj.getDate()} ${MONTHS_TH[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
@@ -216,11 +223,6 @@ export default function EmployeesPage({
     };
   }
 
-  function getLocalDateStr(d = new Date()) {
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  }
-  const today = getLocalDateStr();
-
   function formatDateLabel(dateStr) {
     if (dateStr === today) return "วันนี้";
     const d = new Date(dateStr);
@@ -230,13 +232,22 @@ export default function EmployeesPage({
     return `${d.getDate()} ${MONTHS_TH[d.getMonth()]} ${d.getFullYear() + 543}`;
   }
 
+  async function handleSaveEdit() {
+    setSaving(true);
+    try {
+      await onUpdateEmp(editModal.id, editModal.dept, editModal.pos);
+      setEditModal(null);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="emp-page">
       {/* ── Header ── */}
       <div className="emp-header-row">
         <h2 className="emp-title">รายชื่อพนักงาน</h2>
         <div className="emp-header-actions">
-          {/* ✅ Date picker เลือกวันได้อิสระ */}
           <input
             type="date"
             className="emp-date-picker"
@@ -244,7 +255,6 @@ export default function EmployeesPage({
             max={today}
             onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
           />
-          {/* ✅ Export PDF */}
           <button className="export-pdf-btn" onClick={handleExportPDF}>
             ↓ Export PDF
           </button>
@@ -385,7 +395,33 @@ export default function EmployeesPage({
                         </span>
                       )}
                     </td>
-                    <td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {isAdmin && (
+                        <button
+                          className="edit-btn"
+                          style={{
+                            marginRight: 6,
+                            background: "var(--primary, #3d6b3d)",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 6,
+                            padding: "4px 10px",
+                            cursor: "pointer",
+                            fontSize: 13,
+                          }}
+                          onClick={() =>
+                            setEditModal({
+                              id: e.id,
+                              name: e.name,
+                              dept: e.dept || "",
+                              pos: e.pos || "",
+                            })
+                          }
+                          title="แก้ไข"
+                        >
+                          ✏️ แก้ไข
+                        </button>
+                      )}
                       <button
                         className="del-btn"
                         onClick={() => {
@@ -404,6 +440,101 @@ export default function EmployeesPage({
           </tbody>
         </table>
       </div>
+
+      {/* ── Edit Modal ── */}
+      {editModal && (
+        <div
+          className="adm-modal-overlay"
+          onClick={() => !saving && setEditModal(null)}
+        >
+          <div
+            className="adm-modal"
+            onClick={(ev) => ev.stopPropagation()}
+            style={{ maxWidth: 400 }}
+          >
+            <div className="adm-modal-header">
+              <h3>แก้ไขข้อมูล</h3>
+              <button
+                className="adm-modal-close"
+                onClick={() => setEditModal(null)}
+                disabled={saving}
+              >
+                ×
+              </button>
+            </div>
+            <div
+              style={{ padding: "8px 20px 4px", color: "#666", fontSize: 13 }}
+            >
+              {editModal.name} ({editModal.id})
+            </div>
+            <div
+              style={{
+                padding: "12px 20px 20px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                  fontSize: 14,
+                }}
+              >
+                สังกัด
+                <input
+                  className="emp-search"
+                  value={editModal.dept}
+                  onChange={(ev) =>
+                    setEditModal({ ...editModal, dept: ev.target.value })
+                  }
+                  disabled={saving}
+                  style={{ marginTop: 2 }}
+                />
+              </label>
+              <label
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                  fontSize: 14,
+                }}
+              >
+                ตำแหน่ง
+                <input
+                  className="emp-search"
+                  value={editModal.pos}
+                  onChange={(ev) =>
+                    setEditModal({ ...editModal, pos: ev.target.value })
+                  }
+                  disabled={saving}
+                  style={{ marginTop: 2 }}
+                />
+              </label>
+              <div
+                style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
+              >
+                <button
+                  className="clear-btn"
+                  onClick={() => setEditModal(null)}
+                  disabled={saving}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  className="export-pdf-btn"
+                  onClick={handleSaveEdit}
+                  disabled={saving}
+                >
+                  {saving ? "กำลังบันทึก..." : "บันทึก"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
