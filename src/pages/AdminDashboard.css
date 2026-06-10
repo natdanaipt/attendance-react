@@ -335,3 +335,9 @@
   color: var(--text-light);
   font-size: 13px;
 }
+.adm-modal-date {
+  font-size: 11px;
+  color: var(--text-light);
+  width: 70px;
+  text-align: right;
+}

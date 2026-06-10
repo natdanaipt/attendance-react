@@ -18,7 +18,7 @@ export default function AdminDashboard({ employees }) {
   const [month, setMonth] = useState(now.getMonth());
   const [filterDept, setFilterDept] = useState("");
   const [filterDay, setFilterDay] = useState("");
-  const [modal, setModal] = useState(null); // { title, list: [{id,name,dept,time}] }
+  const [modal, setModal] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -188,31 +188,50 @@ export default function AdminDashboard({ employees }) {
   // ── เปิด modal รายชื่อตามหมวด ──
   function openModal(category) {
     const empIds = new Set(filteredEmps.map((e) => e.id));
-    const dateForList = selectedDateStr;
 
-    const inToday = records.filter(
-      (r) => r.date === dateForList && r.type === "in" && empIds.has(r.empId),
+    const todayIn = records.filter(
+      (r) => r.date === today && r.type === "in" && empIds.has(r.empId),
     );
-    const cameIds = new Set(inToday.map((r) => r.empId));
+    const cameIds = new Set(todayIn.map((r) => r.empId));
+
+    // ข้อมูลตาม mode: รายวันที่เลือก หรือ ทั้งเดือน
+    const periodRecs = filterDay
+      ? records.filter(
+          (r) =>
+            r.date === selectedDateStr &&
+            r.type === "in" &&
+            empIds.has(r.empId),
+        )
+      : records.filter(
+          (r) =>
+            r.date.startsWith(monthKey) &&
+            r.type === "in" &&
+            empIds.has(r.empId),
+        );
+
+    const periodLabel = filterDay
+      ? selectedDateStr
+      : `${MONTHS_TH[month]} ${year + 543}`;
 
     let list = [];
     let title = "";
+    let showDate = false;
 
     if (category === "came") {
-      title = `มาวันนี้ — ${dateForList}`;
-      list = inToday.map((r) => {
+      title = `มาวันนี้ — ${today}`;
+      list = todayIn.map((r) => {
         const emp = filteredEmps.find((e) => e.id === r.empId);
         return {
           id: r.empId,
           name: emp?.name || r.empId,
           dept: emp?.dept,
           time: r.time,
-          status: getStatus(r.time).label,
         };
       });
     } else if (category === "onTime") {
-      title = `ตรงเวลา — ${dateForList}`;
-      list = inToday
+      title = `ตรงเวลา — ${periodLabel}`;
+      showDate = !filterDay;
+      list = periodRecs
         .filter((r) => getStatus(r.time).kind === "ok")
         .map((r) => {
           const emp = filteredEmps.find((e) => e.id === r.empId);
@@ -221,11 +240,13 @@ export default function AdminDashboard({ employees }) {
             name: emp?.name || r.empId,
             dept: emp?.dept,
             time: r.time,
+            date: r.date,
           };
         });
     } else if (category === "late") {
-      title = `มาสาย — ${dateForList}`;
-      list = inToday
+      title = `มาสาย — ${periodLabel}`;
+      showDate = !filterDay;
+      list = periodRecs
         .filter((r) => getStatus(r.time).kind === "late")
         .map((r) => {
           const emp = filteredEmps.find((e) => e.id === r.empId);
@@ -234,19 +255,27 @@ export default function AdminDashboard({ employees }) {
             name: emp?.name || r.empId,
             dept: emp?.dept,
             time: r.time,
+            date: r.date,
           };
         });
     } else if (category === "absent") {
-      title = `ยังไม่มา — ${dateForList}`;
+      title = `ยังไม่มา — ${today}`;
       list = filteredEmps
         .filter((e) => !cameIds.has(e.id))
         .map((e) => ({ id: e.id, name: e.name, dept: e.dept, time: "-" }));
     }
 
-    // เรียงตามชื่อ
-    list.sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
+    if (showDate) {
+      list.sort(
+        (a, b) =>
+          a.date.localeCompare(b.date) ||
+          (a.name || "").localeCompare(b.name || "", "th"),
+      );
+    } else {
+      list.sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
+    }
 
-    setModal({ title, list });
+    setModal({ title, list, showDate });
   }
 
   return (
@@ -415,17 +444,20 @@ export default function AdminDashboard({ employees }) {
                 ×
               </button>
             </div>
-            <div className="adm-modal-count">{modal.list.length} คน</div>
+            <div className="adm-modal-count">{modal.list.length} รายการ</div>
             <div className="adm-modal-list">
               {modal.list.length === 0 ? (
                 <div className="adm-modal-empty">ไม่มีรายชื่อ</div>
               ) : (
-                modal.list.map((p) => (
-                  <div key={p.id} className="adm-modal-row">
+                modal.list.map((p, idx) => (
+                  <div key={`${p.id}-${idx}`} className="adm-modal-row">
                     <div className="adm-modal-name">
                       {p.name} <span className="adm-modal-id">({p.id})</span>
                     </div>
                     <div className="adm-modal-dept">{p.dept || "-"}</div>
+                    {modal.showDate && (
+                      <div className="adm-modal-date">{p.date}</div>
+                    )}
                     <div className="adm-modal-time">{p.time}</div>
                   </div>
                 ))
