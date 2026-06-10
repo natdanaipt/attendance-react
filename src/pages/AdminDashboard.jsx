@@ -18,6 +18,7 @@ export default function AdminDashboard({ employees }) {
   const [month, setMonth] = useState(now.getMonth());
   const [filterDept, setFilterDept] = useState("");
   const [filterDay, setFilterDay] = useState("");
+  const [modal, setModal] = useState(null); // { title, list: [{id,name,dept,time}] }
 
   useEffect(() => {
     async function load() {
@@ -86,7 +87,6 @@ export default function AdminDashboard({ employees }) {
     const empIds = new Set(filteredEmps.map((e) => e.id));
 
     if (filterDay) {
-      // โหมดรายวัน: นับเฉพาะวันที่เลือก
       const todayIn = records.filter(
         (r) =>
           r.date === selectedDateStr && r.type === "in" && empIds.has(r.empId),
@@ -100,7 +100,6 @@ export default function AdminDashboard({ employees }) {
       const absent = total - came;
       return { came, onTime, late, absent, total };
     } else {
-      // โหมดภาพรวมทั้งเดือน: มาวันนี้/ยังไม่มา = วันนี้, ตรงเวลา/สาย = รวมทั้งเดือน
       const todayIn = records.filter(
         (r) => r.date === today && r.type === "in" && empIds.has(r.empId),
       );
@@ -186,6 +185,70 @@ export default function AdminDashboard({ employees }) {
 
   const maxCame = Math.max(...dailyData.map((d) => d.came), 1);
 
+  // ── เปิด modal รายชื่อตามหมวด ──
+  function openModal(category) {
+    const empIds = new Set(filteredEmps.map((e) => e.id));
+    const dateForList = selectedDateStr;
+
+    const inToday = records.filter(
+      (r) => r.date === dateForList && r.type === "in" && empIds.has(r.empId),
+    );
+    const cameIds = new Set(inToday.map((r) => r.empId));
+
+    let list = [];
+    let title = "";
+
+    if (category === "came") {
+      title = `มาวันนี้ — ${dateForList}`;
+      list = inToday.map((r) => {
+        const emp = filteredEmps.find((e) => e.id === r.empId);
+        return {
+          id: r.empId,
+          name: emp?.name || r.empId,
+          dept: emp?.dept,
+          time: r.time,
+          status: getStatus(r.time).label,
+        };
+      });
+    } else if (category === "onTime") {
+      title = `ตรงเวลา — ${dateForList}`;
+      list = inToday
+        .filter((r) => getStatus(r.time).kind === "ok")
+        .map((r) => {
+          const emp = filteredEmps.find((e) => e.id === r.empId);
+          return {
+            id: r.empId,
+            name: emp?.name || r.empId,
+            dept: emp?.dept,
+            time: r.time,
+          };
+        });
+    } else if (category === "late") {
+      title = `มาสาย — ${dateForList}`;
+      list = inToday
+        .filter((r) => getStatus(r.time).kind === "late")
+        .map((r) => {
+          const emp = filteredEmps.find((e) => e.id === r.empId);
+          return {
+            id: r.empId,
+            name: emp?.name || r.empId,
+            dept: emp?.dept,
+            time: r.time,
+          };
+        });
+    } else if (category === "absent") {
+      title = `ยังไม่มา — ${dateForList}`;
+      list = filteredEmps
+        .filter((e) => !cameIds.has(e.id))
+        .map((e) => ({ id: e.id, name: e.name, dept: e.dept, time: "-" }));
+    }
+
+    // เรียงตามชื่อ
+    list.sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
+
+    setModal({ title, list });
+  }
+
   return (
     <div className="adm-dash">
       <div className="adm-header">
@@ -254,30 +317,39 @@ export default function AdminDashboard({ employees }) {
           : `วันนี้ — ${today}`}
       </div>
 
-      {/* การ์ด — label เปลี่ยนตาม mode */}
       <div className="adm-cards">
-        <div className="adm-card adm-card-blue">
+        <div
+          className="adm-card adm-card-blue adm-card-clickable"
+          onClick={() => openModal("came")}
+        >
           <div className="adm-card-num">{todayStats.came}</div>
-          <div className="adm-card-label">
-            {filterDay ? "มาวันนี้" : "มาวันนี้"}
-          </div>
+          <div className="adm-card-label">มาวันนี้</div>
           <div className="adm-card-sub">จาก {todayStats.total} คน</div>
         </div>
-        <div className="adm-card adm-card-green">
+        <div
+          className="adm-card adm-card-green adm-card-clickable"
+          onClick={() => openModal("onTime")}
+        >
           <div className="adm-card-num">{todayStats.onTime}</div>
           <div className="adm-card-label">
             {filterDay ? "ตรงเวลา" : "ครั้งที่ตรงเวลา"}
           </div>
           {!filterDay && <div className="adm-card-sub">รวมทั้งเดือน</div>}
         </div>
-        <div className="adm-card adm-card-gold">
+        <div
+          className="adm-card adm-card-gold adm-card-clickable"
+          onClick={() => openModal("late")}
+        >
           <div className="adm-card-num">{todayStats.late}</div>
           <div className="adm-card-label">
             {filterDay ? "มาสาย" : "ครั้งที่สาย"}
           </div>
           {!filterDay && <div className="adm-card-sub">รวมทั้งเดือน</div>}
         </div>
-        <div className="adm-card adm-card-red">
+        <div
+          className="adm-card adm-card-red adm-card-clickable"
+          onClick={() => openModal("absent")}
+        >
           <div className="adm-card-num">{todayStats.absent}</div>
           <div className="adm-card-label">ยังไม่มา</div>
         </div>
@@ -329,6 +401,39 @@ export default function AdminDashboard({ employees }) {
           ))}
         </div>
       </div>
+
+      {/* ── Modal รายชื่อ ── */}
+      {modal && (
+        <div className="adm-modal-overlay" onClick={() => setModal(null)}>
+          <div className="adm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="adm-modal-header">
+              <h3>{modal.title}</h3>
+              <button
+                className="adm-modal-close"
+                onClick={() => setModal(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="adm-modal-count">{modal.list.length} คน</div>
+            <div className="adm-modal-list">
+              {modal.list.length === 0 ? (
+                <div className="adm-modal-empty">ไม่มีรายชื่อ</div>
+              ) : (
+                modal.list.map((p) => (
+                  <div key={p.id} className="adm-modal-row">
+                    <div className="adm-modal-name">
+                      {p.name} <span className="adm-modal-id">({p.id})</span>
+                    </div>
+                    <div className="adm-modal-dept">{p.dept || "-"}</div>
+                    <div className="adm-modal-time">{p.time}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

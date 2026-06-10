@@ -220,3 +220,118 @@
     grid-template-columns: 1fr;
   }
 }
+.adm-card-clickable {
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.adm-card-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Modal ── */
+.adm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.adm-modal {
+  background: var(--warm-white);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.adm-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.adm-modal-header h3 {
+  font-family: "Mitr", sans-serif;
+  font-size: 16px;
+  color: var(--green-dark);
+  font-weight: 500;
+}
+
+.adm-modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-light);
+}
+
+.adm-modal-count {
+  padding: 8px 20px;
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.adm-modal-list {
+  overflow-y: auto;
+  padding: 0 20px 16px;
+}
+
+.adm-modal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 13px;
+}
+
+.adm-modal-row:last-child {
+  border-bottom: none;
+}
+
+.adm-modal-name {
+  font-weight: 500;
+  color: var(--text-dark);
+  flex: 1;
+}
+
+.adm-modal-id {
+  font-size: 11px;
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+.adm-modal-dept {
+  font-size: 12px;
+  color: var(--text-mid);
+  flex: 1;
+  text-align: right;
+}
+
+.adm-modal-time {
+  font-family: "Mitr", sans-serif;
+  font-size: 13px;
+  color: var(--green-dark);
+  width: 50px;
+  text-align: right;
+}
+
+.adm-modal-empty {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--text-light);
+  font-size: 13px;
+}
