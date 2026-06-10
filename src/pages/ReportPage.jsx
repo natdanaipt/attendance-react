@@ -142,12 +142,10 @@ export default function ReportPage({ employees, isAdmin }) {
     const printWindow = window.open("", "_blank", "width=900,height=700");
     printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-      }, 800);
-    };
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 800);
   }
 
   return (

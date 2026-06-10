@@ -217,10 +217,10 @@ export default function EmployeesPage({
     const win = window.open("", "_blank");
     win.document.write(html);
     win.document.close();
-    win.onload = () => {
+    setTimeout(() => {
       win.focus();
       win.print();
-    };
+    }, 800);
   }
 
   function formatDateLabel(dateStr) {
