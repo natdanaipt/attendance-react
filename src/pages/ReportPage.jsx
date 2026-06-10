@@ -11,6 +11,8 @@ export default function ReportPage({ employees, isAdmin }) {
   const [month, setMonth] = useState(now.getMonth());
   const [records, setRecords] = useState([]);
   const [search, setSearch] = useState("");
+  const [filterDept, setFilterDept] = useState("");
+  const [filterPos, setFilterPos] = useState("");
 
   useEffect(() => {
     async function loadRecords() {
@@ -45,6 +47,17 @@ export default function ReportPage({ employees, isAdmin }) {
     loadRecords();
   }, []);
 
+  // unique dept และ pos
+  const deptOptions = useMemo(
+    () => [...new Set(employees.map((e) => e.dept).filter(Boolean))].sort(),
+    [employees],
+  );
+
+  const posOptions = useMemo(
+    () => [...new Set(employees.map((e) => e.pos).filter(Boolean))].sort(),
+    [employees],
+  );
+
   const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
 
   const rows = useMemo(() => {
@@ -64,18 +77,26 @@ export default function ReportPage({ employees, isAdmin }) {
     });
   }, [records, employees, monthKey, year, month]);
 
+  // กรอง
   const filteredRows = useMemo(() => {
-    if (!search.trim()) return rows;
-    const q = search.toLowerCase();
-    return rows.filter(
-      (e) => e.id.toLowerCase().includes(q) || e.name.toLowerCase().includes(q),
-    );
-  }, [rows, search]);
+    return rows.filter((e) => {
+      if (search) {
+        const q = search.toLowerCase();
+        if (
+          !e.id.toLowerCase().includes(q) &&
+          !e.name.toLowerCase().includes(q)
+        )
+          return false;
+      }
+      if (filterDept && e.dept !== filterDept) return false;
+      if (filterPos && e.pos !== filterPos) return false;
+      return true;
+    });
+  }, [rows, search, filterDept, filterPos]);
 
   function handleExportPDF() {
     const monthName = MONTHS_TH[month];
     const buddhistYear = year + 543;
-    const workDays = filteredRows[0]?.workDays || 0;
 
     const tableRows = filteredRows
       .map(
@@ -128,7 +149,7 @@ export default function ReportPage({ employees, isAdmin }) {
         <th>แผนก</th>
         <th>ตำแหน่ง</th>
         <th>วันทำงานทั้งหมด</th>
-        <th>วันที่มาทำงาน</th>
+        <th>วันที่มา</th>
         <th>ตรงเวลา</th>
         <th>สาย</th>
         <th>ขาด</th>
@@ -142,10 +163,12 @@ export default function ReportPage({ employees, isAdmin }) {
     const printWindow = window.open("", "_blank", "width=900,height=700");
     printWindow.document.write(html);
     printWindow.document.close();
-    setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-    }, 800);
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 800);
+    };
   }
 
   return (
@@ -185,7 +208,7 @@ export default function ReportPage({ employees, isAdmin }) {
         </div>
       </div>
 
-      {/* Search */}
+      {/* ── Filter bar ── */}
       <div className="emp-filters" style={{ marginBottom: "1rem" }}>
         <input
           type="text"
@@ -194,8 +217,39 @@ export default function ReportPage({ employees, isAdmin }) {
           onChange={(e) => setSearch(e.target.value)}
           className="emp-search"
         />
-        {search && (
-          <button className="clear-btn" onClick={() => setSearch("")}>
+        <select
+          className="export-select"
+          value={filterDept}
+          onChange={(e) => setFilterDept(e.target.value)}
+        >
+          <option value="">ทุกแผนก</option>
+          {deptOptions.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
+        <select
+          className="export-select"
+          value={filterPos}
+          onChange={(e) => setFilterPos(e.target.value)}
+        >
+          <option value="">ทุกตำแหน่ง</option>
+          {posOptions.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+        {(search || filterDept || filterPos) && (
+          <button
+            className="clear-btn"
+            onClick={() => {
+              setSearch("");
+              setFilterDept("");
+              setFilterPos("");
+            }}
+          >
             ✕ ล้าง
           </button>
         )}
@@ -210,7 +264,7 @@ export default function ReportPage({ employees, isAdmin }) {
               <th>แผนก</th>
               <th>ตำแหน่ง</th>
               <th>วันทำงานทั้งหมด</th>
-              <th>วันที่มาทำงาน</th>
+              <th>วันที่มา</th>
               <th>ตรงเวลา</th>
               <th>สาย</th>
               <th>ขาด</th>
