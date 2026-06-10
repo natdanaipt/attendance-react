@@ -226,7 +226,7 @@ export async function fetchRecordsFromSheets() {
     } else {
       // กรณี Date object — ใช้ UTC เพื่อไม่ให้ timezone ดึงวันไปก่อน
       const d = new Date(row.date);
-      date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+      date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
 
     // ── แก้บัคเวลา: ตัดให้เหลือแค่ HH:MM ──
@@ -312,7 +312,7 @@ export async function fetchRecordsByEmp(empId) {
       date = row.date.slice(0, 10);
     } else {
       const d = new Date(row.date);
-      date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+      date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
 
     const checkIn = row.check_in ? String(row.check_in).slice(0, 5) : null;

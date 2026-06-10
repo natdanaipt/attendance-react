@@ -193,7 +193,8 @@ export default function AdminDashboard({ employees }) {
     const empIds = new Set(filteredEmps.map((e) => e.id));
 
     const todayIn = records.filter(
-      (r) => r.date === today && r.type === "in" && empIds.has(r.empId),
+      (r) =>
+        r.date === selectedDateStr && r.type === "in" && empIds.has(r.empId),
     );
     const cameIds = new Set(todayIn.map((r) => r.empId));
 
@@ -221,7 +222,7 @@ export default function AdminDashboard({ employees }) {
     let showDate = false;
 
     if (category === "came") {
-      title = `มาวันนี้ — ${today}`;
+      title = `มาวันนี้ — ${selectedDateStr}`;
       list = todayIn.map((r) => {
         const emp = filteredEmps.find((e) => e.id === r.empId);
         return {
@@ -262,7 +263,7 @@ export default function AdminDashboard({ employees }) {
           };
         });
     } else if (category === "absent") {
-      title = `ยังไม่มา — ${today}`;
+      title = `ยังไม่มา — ${selectedDateStr}`;
       list = filteredEmps
         .filter((e) => !cameIds.has(e.id))
         .map((e) => ({ id: e.id, name: e.name, dept: e.dept, time: "-" }));
