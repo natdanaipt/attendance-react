@@ -362,38 +362,37 @@ export default function EmployeesPage({
                     <td className="emp-dept">{e.dept || "—"}</td>
                     <td className="emp-pos">{e.pos || "—"}</td>
                     <td>
-                      {recIn ? (
-                        <>
-                          <span className="entry entry-in">
-                            <span className="entry-dot" />
-                            เข้า {recIn.time}
-                          </span>
-                          {recOut && (
-                            <span
-                              className="entry entry-out"
-                              style={{ marginLeft: 6 }}
-                            >
+                      <div className="emp-status-wrap">
+                        {recIn ? (
+                          <>
+                            <span className="entry entry-in">
                               <span className="entry-dot" />
-                              ออก {recOut.time}
+                              เข้า {recIn.time}
                             </span>
-                          )}
-                        </>
-                      ) : (
-                        <span
-                          className="entry"
-                          style={{
-                            background: "var(--paper)",
-                            color: "var(--text-light)",
-                            borderColor: "var(--border-light)",
-                          }}
-                        >
+                            {recOut && (
+                              <span className="entry entry-out">
+                                <span className="entry-dot" />
+                                ออก {recOut.time}
+                              </span>
+                            )}
+                          </>
+                        ) : (
                           <span
-                            className="entry-dot"
-                            style={{ background: "var(--border)" }}
-                          />
-                          ยังไม่เข้า
-                        </span>
-                      )}
+                            className="entry"
+                            style={{
+                              background: "var(--paper)",
+                              color: "var(--text-light)",
+                              borderColor: "var(--border-light)",
+                            }}
+                          >
+                            <span
+                              className="entry-dot"
+                              style={{ background: "var(--border)" }}
+                            />
+                            ยังไม่เข้า
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ whiteSpace: "nowrap" }}>
                       {isAdmin && (
