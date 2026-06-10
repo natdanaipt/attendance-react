@@ -11,7 +11,10 @@ const API_URL = "https://attendance-api-j7q6.onrender.com";
 
 export default function AdminDashboard({ employees }) {
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
+  function getLocalDateStr(d = new Date()) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  const today = getLocalDateStr();
 
   const [records, setRecords] = useState([]);
   const [year, setYear] = useState(now.getFullYear());
@@ -32,7 +35,7 @@ export default function AdminDashboard({ employees }) {
             date = row.date.slice(0, 10);
           } else {
             const d = new Date(row.date);
-            date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+            date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
           }
           const empId = String(row.emp_id);
           const checkIn = row.check_in

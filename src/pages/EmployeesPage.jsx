@@ -70,7 +70,7 @@ export default function EmployeesPage({
             date = row.date.slice(0, 10);
           } else {
             const d = new Date(row.date);
-            date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+            date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
           }
           const empId = String(row.emp_id);
           const checkIn = row.check_in
@@ -216,7 +216,10 @@ export default function EmployeesPage({
     };
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  function getLocalDateStr(d = new Date()) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  const today = getLocalDateStr();
 
   function formatDateLabel(dateStr) {
     if (dateStr === today) return "วันนี้";
