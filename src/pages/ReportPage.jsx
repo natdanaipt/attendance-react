@@ -47,7 +47,6 @@ export default function ReportPage({ employees, isAdmin }) {
     loadRecords();
   }, []);
 
-  // unique dept และ pos
   const deptOptions = useMemo(
     () => [...new Set(employees.map((e) => e.dept).filter(Boolean))].sort(),
     [employees],
@@ -77,7 +76,6 @@ export default function ReportPage({ employees, isAdmin }) {
     });
   }, [records, employees, monthKey, year, month]);
 
-  // กรอง
   const filteredRows = useMemo(() => {
     return rows.filter((e) => {
       if (search) {
@@ -93,6 +91,30 @@ export default function ReportPage({ employees, isAdmin }) {
       return true;
     });
   }, [rows, search, filterDept, filterPos]);
+
+  // ── สรุปภาพรวม ──
+  const summary = useMemo(() => {
+    const total = filteredRows.length;
+    const workDays = filteredRows[0]?.workDays || 0;
+    const totalCame = filteredRows.reduce((s, e) => s + e.days, 0);
+    const totalOnTime = filteredRows.reduce((s, e) => s + e.onTime, 0);
+    const totalLate = filteredRows.reduce((s, e) => s + e.late, 0);
+    const totalAbsent = filteredRows.reduce((s, e) => s + e.absent, 0);
+    const avgDays = total > 0 ? (totalCame / total).toFixed(1) : 0;
+    const maxPossible = total * workDays;
+    const attendanceRate =
+      maxPossible > 0 ? Math.round((totalCame / maxPossible) * 100) : 0;
+    return {
+      total,
+      workDays,
+      totalCame,
+      totalOnTime,
+      totalLate,
+      totalAbsent,
+      avgDays,
+      attendanceRate,
+    };
+  }, [filteredRows]);
 
   function handleExportPDF() {
     const monthName = MONTHS_TH[month];
@@ -111,8 +133,7 @@ export default function ReportPage({ employees, isAdmin }) {
         <td style="text-align:center; color:green">${e.onTime}</td>
         <td style="text-align:center; color:#cc0000">${e.late}</td>
         <td style="text-align:center; color:#cc0000">${e.absent}</td>
-      </tr>
-    `,
+      </tr>`,
       )
       .join("");
 
@@ -127,12 +148,20 @@ export default function ReportPage({ employees, isAdmin }) {
     body { font-family:'Sarabun',sans-serif; font-size:13px; color:#111; padding:30px 40px; }
     .header { text-align:center; margin-bottom:20px; }
     .header h1 { font-size:18px; font-weight:700; margin-bottom:4px; }
-    .header p  { font-size:14px; }
+    .header p { font-size:14px; }
     table { width:100%; border-collapse:collapse; margin-top:10px; }
     thead tr { background-color:#f0f0f0; }
     th { border:1px solid #ccc; padding:7px 10px; text-align:center; font-weight:700; font-size:13px; }
     td { border:1px solid #ddd; padding:6px 10px; }
     tr:nth-child(even) { background:#fafafa; }
+    .summary-box { margin-top:28px; border:1px solid #ccc; border-radius:8px; padding:16px 20px; background:#f8f8f8; }
+    .summary-box h2 { font-size:15px; font-weight:700; margin-bottom:12px; }
+    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .summary-item { background:#fff; border:1px solid #ddd; border-radius:6px; padding:10px 14px; }
+    .summary-item .label { font-size:11px; color:#666; margin-bottom:4px; }
+    .summary-item .value { font-size:18px; font-weight:700; color:#2e7d32; }
+    .summary-item .value.red { color:#c0392b; }
+    .summary-item .value.gold { color:#b8860b; }
     @media print { @page { size:A4 landscape; margin:15mm; } }
   </style>
 </head>
@@ -144,31 +173,60 @@ export default function ReportPage({ employees, isAdmin }) {
   <table>
     <thead>
       <tr>
-        <th>รหัส</th>
-        <th>ชื่อ-นามสกุล</th>
-        <th>แผนก</th>
-        <th>ตำแหน่ง</th>
-        <th>วันทำงานทั้งหมด</th>
-        <th>วันที่มา</th>
-        <th>ตรงเวลา</th>
-        <th>สาย</th>
-        <th>ขาด</th>
+        <th>รหัส</th><th>ชื่อ-นามสกุล</th><th>แผนก</th><th>ตำแหน่ง</th>
+        <th>วันทำงานทั้งหมด</th><th>วันที่มา</th><th>ตรงเวลา</th><th>สาย</th><th>ขาด</th>
       </tr>
     </thead>
     <tbody>${tableRows}</tbody>
   </table>
+
+  <div class="summary-box">
+    <h2>ผลสรุปภาพรวม</h2>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="label">จำนวนพนักงานทั้งหมด</div>
+        <div class="value">${summary.total} คน</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">วันที่มาทำงาน (รวม)</div>
+        <div class="value">${summary.totalCame} วัน</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">มาทำงานเฉลี่ย</div>
+        <div class="value">${summary.avgDays} วัน/คน</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">อัตราการมาทำงาน</div>
+        <div class="value">${summary.attendanceRate}%</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">ตรงเวลา (รวม)</div>
+        <div class="value">${summary.totalOnTime} ครั้ง</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">มาสาย (รวม)</div>
+        <div class="value gold">${summary.totalLate} ครั้ง</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">ขาด (รวม)</div>
+        <div class="value red">${summary.totalAbsent} ครั้ง</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">วันทำงานในเดือน</div>
+        <div class="value">${summary.workDays} วัน</div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>`;
 
     const printWindow = window.open("", "_blank", "width=900,height=700");
     printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-      }, 800);
-    };
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 800);
   }
 
   return (
@@ -255,6 +313,7 @@ export default function ReportPage({ employees, isAdmin }) {
         )}
       </div>
 
+      {/* ── Table ── */}
       <div className="rpt-table-wrap">
         <table className="rpt-table">
           <thead>
@@ -292,6 +351,95 @@ export default function ReportPage({ employees, isAdmin }) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* ── สรุปภาพรวม ── */}
+      <div
+        style={{
+          marginTop: 28,
+          background: "#f5f7f5",
+          border: "1px solid #d6e4d6",
+          borderRadius: 10,
+          padding: "20px 24px",
+        }}
+      >
+        <h3
+          style={{
+            fontSize: 15,
+            fontWeight: 700,
+            marginBottom: 16,
+            color: "#2e5e2e",
+          }}
+        >
+          ผลสรุปภาพรวม — {MONTHS_TH[month]} {year + 543}
+        </h3>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            gap: 12,
+          }}
+        >
+          {[
+            {
+              label: "จำนวนพนักงาน",
+              value: `${summary.total} คน`,
+              color: "#2e5e2e",
+            },
+            {
+              label: "วันที่มาทำงาน (รวม)",
+              value: `${summary.totalCame} วัน`,
+              color: "#2e5e2e",
+            },
+            {
+              label: "มาเฉลี่ย",
+              value: `${summary.avgDays} วัน/คน`,
+              color: "#2e5e2e",
+            },
+            {
+              label: "อัตราการมาทำงาน",
+              value: `${summary.attendanceRate}%`,
+              color: "#2e5e2e",
+            },
+            {
+              label: "ตรงเวลา (รวม)",
+              value: `${summary.totalOnTime} ครั้ง`,
+              color: "#2e7d32",
+            },
+            {
+              label: "มาสาย (รวม)",
+              value: `${summary.totalLate} ครั้ง`,
+              color: "#b8860b",
+            },
+            {
+              label: "ขาด (รวม)",
+              value: `${summary.totalAbsent} ครั้ง`,
+              color: "#c0392b",
+            },
+            {
+              label: "วันทำงานในเดือน",
+              value: `${summary.workDays} วัน`,
+              color: "#2e5e2e",
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              style={{
+                background: "#fff",
+                border: "1px solid #d6e4d6",
+                borderRadius: 8,
+                padding: "12px 16px",
+              }}
+            >
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+                {item.label}
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: item.color }}>
+                {item.value}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
