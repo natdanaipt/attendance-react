@@ -207,7 +207,7 @@ export function exportCSV(records, empId, year, month) {
 // ── Google Sheets ─────────────────────────────────
 // ── Backend API ───────────────────────────────────
 
-const API_URL = "http://10.10.9.204:5000";
+const API_URL = "https://distinct-proofs-freemason.ngrok-free.dev";
 
 // ดึง records จาก PostgreSQL
 export async function fetchRecordsFromSheets() {
