@@ -206,7 +206,7 @@ export function exportCSV(records, empId, year, month) {
 }
 // ── Google Sheets ─────────────────────────────────
 // ── Backend API ───────────────────────────────────
-const API_URL = "https://attendance-api-j7q6.onrender.com";
+const API_URL = "http://10.10.9.204:5000";
 
 // ดึง records จาก PostgreSQL
 export async function fetchRecordsFromSheets() {
