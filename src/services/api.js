@@ -211,7 +211,9 @@ const API_URL = "https://distinct-proofs-freemason.ngrok-free.dev";
 
 // ดึง records จาก PostgreSQL
 export async function fetchRecordsFromSheets() {
-  const res = await fetch(`${API_URL}/api/records`);
+  const res = await fetch(`${API_URL}/api/records`, {
+    headers: { "ngrok-skip-browser-warning": "1" },
+  });
   const rows = await res.json();
 
   const records = [];
@@ -258,7 +260,9 @@ export async function fetchRecordsFromSheets() {
 
 // ดึง employees จาก PostgreSQL
 export async function fetchEmployeesFromSheets() {
-  const res = await fetch(`${API_URL}/api/employees`);
+  const res = await fetch(`${API_URL}/api/employees`, {
+    headers: { "ngrok-skip-browser-warning": "1" },
+  });
   const rows = await res.json();
 
   return rows.map((row) => ({
@@ -303,7 +307,9 @@ export function getHolidayName(dateStr) {
   return HOLIDAYS_2569[dateStr] || null;
 }
 export async function fetchRecordsByEmp(empId) {
-  const res = await fetch(`${API_URL}/api/attendance/${empId}`);
+  const res = await fetch(`${API_URL}/api/attendance/${empId}`, {
+    headers: { "ngrok-skip-browser-warning": "1" },
+  });
   const rows = await res.json();
 
   const records = [];
