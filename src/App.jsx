@@ -56,7 +56,6 @@ export default function App() {
   const [calMonth] = useState(now.getMonth());
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // ✅ เพิ่ม ref สำหรับตรวจจับการคลิกข้างนอก
   const dropdownRef = useRef(null);
 
   const isAdmin =
@@ -65,7 +64,6 @@ export default function App() {
 
   const REPORT_PAGES = ["report_dashboard", "report_monthly"];
 
-  // ✅ ปิด dropdown เมื่อคลิกข้างนอก
   useEffect(() => {
     function handleClickOutside(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -155,7 +153,7 @@ export default function App() {
     async function handleSSO() {
       try {
         const res = await fetch(
-          "https://attendance-api-j7q6.onrender.com/api/sso/callback",
+          `${import.meta.env.VITE_API_URL}/api/sso/callback`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -242,7 +240,7 @@ export default function App() {
   async function handleUpdateEmp(id, dept, pos) {
     try {
       const res = await fetch(
-        `https://attendance-api-j7q6.onrender.com/api/employees/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/employees/${id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -337,7 +335,6 @@ export default function App() {
       <nav className="app-nav">
         {NAV.map((n) =>
           n.sub ? (
-            // ✅ เพิ่ม position: relative และ ref เพื่อให้ dropdown วางตำแหน่งถูกต้อง
             <div
               key={n.key}
               className="nav-dropdown"

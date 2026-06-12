@@ -7,7 +7,7 @@ import {
 } from "../services/api";
 import "./AdminDashboard.css";
 
-const API_URL = "https://attendance-api-j7q6.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function AdminDashboard({ employees }) {
   const now = new Date();

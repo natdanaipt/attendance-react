@@ -3,7 +3,7 @@ import { getStatus, MONTHS_TH, countWorkDays } from "../services/api";
 import "./ReportPage.css";
 import "./HistoryPage.css";
 
-const API_URL = "https://attendance-api-j7q6.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ReportPage({ employees, isAdmin }) {
   const now = new Date();

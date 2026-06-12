@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import "./EmployeesPage.css";
 
-const API_URL = "https://attendance-api-j7q6.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const MONTHS_TH = [
   "มกราคม",
